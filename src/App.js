@@ -19,6 +19,7 @@ import Users from './pages/Admin/Users/Users'
 import EditFilm from './pages/Admin/Film/EditFilm';
 import AddNewUser from './pages/Admin/Users/AddNewUser';
 import EditUser from './pages/Admin/Users/EditUser';
+import ScheduleManagement from './pages/Admin/Schedule/ScheduleManagement';
 
 function App() {
     return (
@@ -42,11 +43,11 @@ function App() {
                     <Route path='user' element={<Users />} />
                     <Route path='user/addnewuser' element={<AddNewUser />} />
                     <Route path='user/edit/:taiKhoan' element={<EditUser />} />
-                    <Route path='film' element={<Film />} />
-                    <Route path='film/edit/:id' element={<EditFilm />} />
-                    <Route path='film/showtime/:id/:tenPhim' element={<Showtime />} />
-                    <Route path='film/addnewfilm' element={<AddNewFilm />} />
-                    <Route path='showtime' element={<Showtime />} />
+                    <Route path='movie' element={<Film />} />
+                    <Route path='movie/edit/:id' element={<EditFilm />} />
+                    <Route path='movie/showtime/:id/:tenPhim' element={<Showtime />} />
+                    <Route path='movie/addnewfilm' element={<AddNewFilm />} />
+                    <Route path='schedule' element={<ScheduleManagement />} />
                 </Route>
             </Routes>
         </HistoryRouter>

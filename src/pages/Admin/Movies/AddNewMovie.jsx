@@ -3,7 +3,7 @@ import React from 'react';
 import { useFormik } from 'formik';
 import moment from 'moment';
 import { useState } from 'react';
-import { themPhimApi } from '../../../redux/reducers/FilmReducer';
+import { themPhimApi } from '../../../redux/reducers/MovieReducer';
 import { useDispatch } from 'react-redux';
 import { GROUPID } from '../../../utils/constant';
 import { SwalConfig } from '../../../utils/config';
@@ -179,16 +179,16 @@ export default () => {
 //             }
 
 //             // Gọi API thêm phim
-//             axios.post('http://localhost:8080/api/movies', formData) // Đổi URL thành đúng API của bạn
-//                 .then(response => {
-//                     console.log('Phim đã được thêm:', response.data);
-//                     alert('Thêm phim thành công');
-//                     // Xử lý sau khi thêm phim thành công
-//                 })
-//                 .catch(error => {
-//                     console.error('Lỗi khi thêm phim:', error);
-//                     alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
-//                 });
+//             // axios.post('http://localhost:8080/api/movies', formData) // Đổi URL thành đúng API của bạn
+//             //     .then(response => {
+//             //         console.log('Phim đã được thêm:', response.data);
+//             //         alert('Thêm phim thành công');
+//             //         // Xử lý sau khi thêm phim thành công
+//             //     })
+//             //     .catch(error => {
+//             //         console.error('Lỗi khi thêm phim:', error);
+//             //         alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+//             //     });
 
 
 //         }

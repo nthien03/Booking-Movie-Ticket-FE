@@ -45,103 +45,16 @@ export const callApiLichChieuTheoPhim = (value) => async (dispatch) => {
     }
 }
 
-// export const callApiFilm = async(dispatch) => {
-//     try {
-//         const apiFilm = await LayDanhSachPhim()
-//         dispatch(getFilmList(apiFilm.data.content))
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
-
-// export const callApiFilm = async (dispatch) => {
-//     try {
-//         // Fake data (giả lập dữ liệu API trả về)
-//         const fakeData = {
-//             data: {
-//                 content: [
-//                     {
-//                         maPhim: 1,
-//                         tenPhim: 'Phim A',
-//                         hinhAnh: '../../assets/img/avatar.jpg'
-//                     },
-//                     {
-//                         maPhim: 2,
-//                         tenPhim: 'Phim B',
-//                         hinhAnh: '../../assets/img/avatar.jpg'
-//                     }
-//                 ]
-//             }
-//         };
-
-//         // Dispatch action với fake data
-//         dispatch(getFilmList(fakeData.data.content));
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
 export const callApiFilm = async (dispatch) => {
     try {
-        const fakeData = {
-            data: {
-                content: [
-                    {
-                        maPhim: 1,
-                        tenPhim: 'Phim A',
-                        hinhAnh: avatar,
-                        sapChieu: false // phim đang chiếu
-                    },
-                    {
-                        maPhim: 2,
-                        tenPhim: 'Phim B',
-                        hinhAnh: avatar,
-                        sapChieu: true // phim sắp chiếu
-                    },
-                    {
-                        maPhim: 3,
-                        tenPhim: 'Phim B',
-                        hinhAnh: avatar,
-                        sapChieu: false
-                    },
-                    {
-                        maPhim: 4,
-                        tenPhim: 'Phim D',
-                        hinhAnh: avatar,
-                        sapChieu: true
-                    },
-                    {
-                        maPhim: 5,
-                        tenPhim: 'Phim A',
-                        hinhAnh: avatar,
-                        sapChieu: false // phim đang chiếu
-                    },
-                    {
-                        maPhim: 6,
-                        tenPhim: 'Phim B',
-                        hinhAnh: avatar,
-                        sapChieu: true // phim sắp chiếu
-                    },
-                    {
-                        maPhim: 7,
-                        tenPhim: 'Phim C',
-                        hinhAnh: avatar,
-                        sapChieu: false
-                    },
-                    {
-                        maPhim: 8,
-                        tenPhim: 'Phim D',
-                        hinhAnh: avatar,
-                        sapChieu: true
-                    }
-                ]
-            }
-        };
-
-        dispatch(getFilmList(fakeData.data.content));
+        const apiFilm = await LayDanhSachPhim()
+        dispatch(getFilmList(apiFilm.data.content))
     } catch (error) {
-        console.log(error);
+        console.log(error)
     }
-};
+}
+
+
 export const themPhimApi = async (formData) => {
     try {
         await themPhimUpload(formData)

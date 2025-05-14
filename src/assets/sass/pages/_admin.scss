@@ -23,7 +23,7 @@
 
 .adminFilm {
     .ant-btn.ant-btn-primary.ant-btn-lg.ant-input-search-button {
-        background-color: #1890ff !important;
+        background-color: #1890ff;
     }
 }
 
@@ -32,7 +32,8 @@
         .ant-switch {
             background-color: #00000049;
         }
-        .ant-switch.ant-switch-checked{
+
+        .ant-switch.ant-switch-checked {
             background-color: #1890ff;
         }
     }
