@@ -2,10 +2,11 @@
     .film-name-card-mobile {
         font-size: 11px;
 
-        @include responsive('sm'){
+        @include responsive('sm') {
             font-size: 10px;
         }
     }
+
     .ant-tabs-tab-btn {
         border: none;
         color: #888a8b;
@@ -13,13 +14,15 @@
         font-size: 18px;
         font-weight: 500;
 
-        @include responsive('lg'){
+        @include responsive('lg') {
             font-size: 16px;
         }
-        @include responsive('md'){
+
+        @include responsive('md') {
             font-size: 14px;
         }
-        @include responsive('sm'){
+
+        @include responsive('sm') {
             font-size: 12px;
         }
     }
@@ -36,32 +39,47 @@
         color: #43464b !important;
         text-shadow: 0 0 .25px currentcolor;
     }
-    .ant-tabs-nav {
-        width: 50%;
-    }
-    @include responsive('lg'){
-        .ant-tabs-nav{
+
+    // .ant-tabs-nav {
+    //     width: 50%;
+    // }
+
+    @include responsive('lg') {
+        .ant-tabs-nav {
             width: 100%;
         }
     }
-    
+
+    .ant-tabs-nav-wrap {
+        justify-content: center !important;
+    }
 
     // slider react-slick
     .slick-slider {
-        .slick-next:before , .slick-prev:before{
+
+        .slick-next:before,
+        .slick-prev:before {
             color: #f26b38;
             font-size: 42px !important;
             opacity: 1;
         }
+
         .slick-arrow {
             z-index: 1;
             top: 48.5%;
         }
+
         .slick-next {
             right: 0;
         }
+
         .slick-prev {
             left: -20px;
         }
     }
+
+    // .custom-centered-tabs .ant-tabs-nav {
+    //     display: flex;
+    //     justify-content: center;
+    // }
 }

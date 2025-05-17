@@ -14,12 +14,12 @@ import BookingTicket from './pages/User/BookingTicket';
 import Dashboard from './pages/Admin/Dashboard';
 import Film from './pages/Admin/Film/Film';
 import Showtime from './pages/Admin/Film/Showtime';
-import AddNewFilm from './pages/Admin/Film/AddNewFilm';
 import Users from './pages/Admin/Users/Users'
 import EditFilm from './pages/Admin/Film/EditFilm';
 import AddNewUser from './pages/Admin/Users/AddNewUser';
 import EditUser from './pages/Admin/Users/EditUser';
 import ScheduleManagement from './pages/Admin/Schedule/ScheduleManagement';
+import MovieDetail from './pages/User/MovieDetail';
 
 function App() {
     return (
@@ -30,6 +30,7 @@ function App() {
                     <Route path='*' element={<NotFound />} />
                     <Route path='notfound' element={<NotFound />} />
                     <Route path='detail/:id' element={<Detail />} />
+                    <Route path='movies/:id' element={<MovieDetail />} />
                     <Route path='inforUser' element={<InforUser />} />
                     <Route path='login' element={<Login />} />
                     <Route path='register' element={<Register />} />
@@ -46,7 +47,6 @@ function App() {
                     <Route path='movie' element={<Film />} />
                     <Route path='movie/edit/:id' element={<EditFilm />} />
                     <Route path='movie/showtime/:id/:tenPhim' element={<Showtime />} />
-                    <Route path='movie/addnewfilm' element={<AddNewFilm />} />
                     <Route path='schedule' element={<ScheduleManagement />} />
                 </Route>
             </Routes>

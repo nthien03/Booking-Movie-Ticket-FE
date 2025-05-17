@@ -6,9 +6,9 @@ import Header from './Header'
 export default function UserTemplate() {
   return (
     <>
-        <Header />
-        <Outlet />
-        <Footer />
+      <Header />
+      <Outlet />
+      {/* <Footer /> */}
     </>
   )
 }
