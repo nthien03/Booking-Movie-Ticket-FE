@@ -20,7 +20,7 @@ export const callUploadSingleFile = (file, folderType) => {
 
     return axios({
         method: 'post',
-        url: 'http://localhost:8080/files',
+        url: 'http://localhost:8080/api/v1/files',
         data: bodyFormData,
         headers: {
             'Content-Type': 'multipart/form-data',

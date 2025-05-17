@@ -5,6 +5,9 @@ import axios from 'axios';
 import { callUploadSingleFile } from '../../services/FilmService';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 
 const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
     const [form] = Form.useForm();
@@ -15,6 +18,8 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
     const [loading, setLoading] = useState(false);
     const [dataLogo, setDataLogo] = useState([]);
     const [loadingUpload, setLoadingUpload] = useState(false);
+    const [actorOptions, setActorOptions] = useState([]);
+    const [genreOptions, setGenreOptions] = useState([]);
 
     const ageRestrictions = [
         { value: "0", label: "All Ages" },
@@ -22,6 +27,31 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
         { value: "16", label: "16+" },
         { value: "18", label: "18+" }
     ];
+
+
+    /** fetch dropdown data */
+    useEffect(() => {
+        if (!isModalOpen) return;           // modal chưa mở ⇒ bỏ qua
+        const fetchDropdowns = async () => {
+            try {
+                const [actorRes, genreRes] = await Promise.all([
+                    axios.get(`http://localhost:8080/api/v1/actors?size=1000`),
+                    axios.get(`http://localhost:8080/api/v1/genres?size=1000`),
+                ]);
+                setActorOptions(
+                    actorRes.data.data.result.map((a) => ({ value: a.id, label: a.fullName }))
+                );
+                setGenreOptions(
+                    genreRes.data.data.result.map((g) => ({ value: g.id, label: g.name }))
+                );
+            } catch (e) {
+                message.error("Không lấy được danh sách diễn viên / thể loại");
+            }
+        };
+        fetchDropdowns();
+    }, [isModalOpen]);
+
+
     useEffect(() => {
         if (dataInit?.id && dataInit?.description) {
             form.setFieldsValue({
@@ -32,7 +62,7 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                 poster: dataInit.poster,
                 trailerUrl: dataInit.trailerUrl,
                 duration: dataInit.duration,
-                genre: dataInit.genre,
+                genres: dataInit.genres,
                 releaseDate: moment(dataInit.releaseDate), // Đảm bảo date được định dạng đúng
                 ageRestriction: dataInit.ageRestriction,
             });
@@ -146,7 +176,7 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
             setLoading(true);
             const releaseDate = moment(values.releaseDate).toISOString();  // Đảm bảo ngày tháng theo định dạng ISO 8601
             // Gửi dữ liệu lên backend bằng axios
-            const response = await axios.post('http://localhost:8080/movies', {
+            const response = await axios.post('http://localhost:8080/api/v1/movies', {
                 movieName: values.movieName,
                 director: values.director,
                 actors: values.actors,
@@ -154,7 +184,7 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                 poster: dataLogo[0]?.name, // Giả sử bạn đã upload poster thành công và lưu trữ URL
                 trailerUrl: values.trailerUrl,
                 duration: values.duration,
-                genre: values.genre,
+                genres: values.genres,
                 releaseDate: releaseDate,
                 ageRestriction: values.ageRestriction,
             });
@@ -271,17 +301,31 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                         <Form.Item
                             name="actors"
                             label="Diễn viên"
-                            tooltip="Separate actors with commas"
                         >
-                            <Input maxLength={255} placeholder="Tom Cruise, Brad Pitt..." />
+                            <Select
+                                mode="multiple"
+                                options={actorOptions}
+                                placeholder="Chọn diễn viên"
+                                showSearch
+                                optionFilterProp="label"
+                                filterOption={(input, option) =>
+                                    option.label.toLowerCase().includes(input.toLowerCase())
+                                } />
                         </Form.Item>
 
                         <Form.Item
-                            name="genre"
+                            name="genres"
                             label="Thể loại"
-                            tooltip="Separate actors with commas"
                         >
-                            <Input maxLength={255} placeholder="Hoạt hình, Khám phá..." />
+                            <Select
+                                mode="multiple"
+                                options={genreOptions}
+                                placeholder="Chọn thể loại"
+                                showSearch
+                                optionFilterProp="label"
+                                filterOption={(input, option) =>
+                                    option.label.toLowerCase().includes(input.toLowerCase())
+                                } />
                         </Form.Item>
 
                         <Form.Item
@@ -322,9 +366,16 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                     <Form.Item
                         name="description"
                         label="Mô tả"
+                        rules={[{ required: false }]} // có thể thêm validate nếu muốn
                     >
-                        <Input.TextArea rows={4} />
+                        <ReactQuill
+                            theme="snow"
+                            onChange={(value) => form.setFieldsValue({ description: value })}
+                            value={form.getFieldValue("description")}
+                            style={{ backgroundColor: "white" }}
+                        />
                     </Form.Item>
+
 
                     <Form.Item
                         name="poster"

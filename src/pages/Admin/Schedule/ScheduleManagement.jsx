@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Tooltip, notification } from 'antd';
-import { EditOutlined, CalendarOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2'
+import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { FiPlus } from "react-icons/fi";
-import CreateScheduleModal from '../../../components/modal/CreateScheduleModal';
+import CreateScheduleModal from '../../../components/modal/ScheduleModal';
 
 const { Search } = Input;
 
 export default function ScheduleManagement() {
-    const [data, setData] = useState([]); // Dữ liệu lịch chiếu
-    const [openCreateScheduleModal, setCreateScheduleModal] = useState(false);
-    const [openEditScheduleModal, setEditScheduleModal] = useState(false);
+    const [data, setData] = useState([]);                    // Danh sách lịch chiếu
+    const [openModal, setOpenModal] = useState(false);       // Trạng thái mở modal
+    const [editingSchedule, setEditingSchedule] = useState();// Lịch đang sửa (nếu có)
 
-    useEffect(() => {
-        // Lấy danh sách lịch chiếu từ API
-        axios.get('http://localhost:8080/schedules') // Thay URL này với URL thực tế của bạn
+    // Fetch dữ liệu lịch chiếu
+    const fetchSchedules = () => {
+        axios.get('http://localhost:8080/api/v1/schedules')
             .then(response => {
                 if (response.data) {
-                    setData(response.data); // Cập nhật dữ liệu vào state
+                    setData(response.data);
                 } else {
                     notification.error({
                         message: 'Lỗi',
@@ -31,139 +30,115 @@ export default function ScheduleManagement() {
                     message: 'Lỗi',
                     description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
                 });
-                console.error('Error fetching data:', error);
+                console.error('Error fetching schedules:', error);
             });
-    }, []); // Chạy khi component mount lần đầu
+    };
 
+    useEffect(() => {
+        fetchSchedules();
+    }, []);
+
+    // Mở modal tạo mới
+    const handleCreate = () => {
+        setEditingSchedule(undefined);  // không có dataInit
+        setOpenModal(true);
+    };
+
+    // Mở modal sửa
+    const handleEdit = (schedule) => {
+        setEditingSchedule(schedule);  // truyền dataInit
+        setOpenModal(true);
+    };
+
+    // Đóng modal
+    const handleModalClose = (shouldReload = false) => {
+        setOpenModal(false);
+        setEditingSchedule(undefined);
+        if (shouldReload) fetchSchedules(); // reload nếu có tạo/sửa thành công
+    };
+
+    // Tìm kiếm theo tên phim
     const searchKeyword = (value) => {
-        setData(prevData => prevData.filter(item => {
-            if (value.trim() === '') return true;
-            return item.movie.movieName.toLowerCase().includes(value.toLowerCase());
-        }));
-    }
+        if (!value.trim()) {
+            fetchSchedules();
+        } else {
+            setData(prevData => prevData.filter(item =>
+                item.movie.movieName.toLowerCase().includes(value.toLowerCase())
+            ));
+        }
+    };
 
+    // Cấu hình cột bảng
     const columns = [
         {
             title: 'Mã lịch chiếu',
             dataIndex: 'id',
             sorter: (a, b) => a.id - b.id,
-            sortDirections: ['descend'],
         },
         {
             title: 'Tên phim',
             dataIndex: 'movie',
-            render: (movie) => movie.movieName, // Hiển thị tên phim
+            render: (movie) => movie.movieName,
         },
         {
             title: 'Phòng chiếu',
             dataIndex: 'room',
-            render: (room) => room.roomName, // Hiển thị tên phòng chiếu
+            render: (room) => room.roomName,
         },
         {
             title: 'Ngày chiếu',
             dataIndex: 'date',
-            render: (date) => new Date(date).toLocaleDateString(), // Hiển thị ngày chiếu
+            render: (date) => new Date(date).toLocaleDateString(),
         },
         {
             title: 'Thời gian chiếu',
-            dataIndex: 'startTime',
-            render: (startTime, record) => {
-                const endTime = new Date(record.endTime);
-                return `${new Date(startTime).toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`;
-            }, // Hiển thị thời gian chiếu
+            render: (_, record) => {
+                const start = new Date(record.startTime);
+                const end = new Date(record.endTime);
+                return `${start.toLocaleTimeString()} - ${end.toLocaleTimeString()}`;
+            }
         },
-        // {
-        //     title: 'Trạng thái',
-        //     dataIndex: 'status',
-        //     render: (status) => status ? 'Đang chiếu' : 'Dừng chiếu', // Hiển thị trạng thái
-        // },
         {
             title: 'Hành động',
-            dataIndex: 'actions',
-            render: (text, schedule) => {
-                return (
-                    <>
-                        {/* Xem chi tiết */}
-                        <Tooltip placement="leftBottom" title={'Xem chi tiết lịch chiếu'}>
-                            <button
-                                onClick={() => setEditScheduleModal(true)}
-                                className="bg-dark text-green-600 mr-3 text-2xl"
-                            >
-                                <EyeOutlined />
-                            </button>
-                        </Tooltip>
+            render: (_, schedule) => (
+                <>
+                    <Tooltip title="Xem chi tiết lịch chiếu">
+                        <button
+                            onClick={() => handleEdit(schedule)}
+                            className="text-green-600 mr-3 text-2xl"
+                        >
+                            <EyeOutlined />
+                        </button>
+                    </Tooltip>
 
-                        {/* Sửa lịch chiếu */}
-                        <Tooltip placement="bottom" title={'Chỉnh sửa lịch chiếu'}>
-                            <button
-                                onClick={() => setEditScheduleModal(true)}
-                                className="bg-dark text-blue-600 mr-3 text-2xl"
-                            >
-                                <EditOutlined />
-                            </button>
-                        </Tooltip>
-
-                        {/* Xóa lịch chiếu */}
-                        {/* <Tooltip placement="topRight" title={'Xóa lịch chiếu'}>
-                            <button
-                                onClick={() => {
-                                    Swal.fire({
-                                        title: 'Bạn có muốn xóa lịch chiếu này không ?',
-                                        showDenyButton: true,
-                                        confirmButtonText: 'Đồng ý',
-                                        denyButtonText: 'Hủy',
-                                        icon: 'question',
-                                        iconColor: 'rgb(104 217 254)',
-                                        confirmButtonColor: '#f97316'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            // Gọi API xóa lịch chiếu
-                                            axios.delete(`http://localhost:8080/schedules/${schedule.id}`)
-                                                .then(() => {
-                                                    notification.success({
-                                                        message: 'Thành công',
-                                                        description: 'Đã xóa lịch chiếu.',
-                                                    });
-                                                    setData(prevData => prevData.filter(item => item.id !== schedule.id));
-                                                })
-                                                .catch(() => {
-                                                    notification.error({
-                                                        message: 'Lỗi',
-                                                        description: 'Không thể xóa lịch chiếu.',
-                                                    });
-                                                });
-                                        }
-                                    })
-                                }}
-                                className="bg-dark text-red-600 text-2xl hover:text-red-400"
-                            >
-                                <DeleteOutlined />
-                            </button>
-                        </Tooltip> */}
-                    </>
-                );
-            },
+                    <Tooltip title="Chỉnh sửa lịch chiếu">
+                        <button
+                            onClick={() => handleEdit(schedule)}
+                            className="text-blue-600 text-2xl"
+                        >
+                            <EditOutlined />
+                        </button>
+                    </Tooltip>
+                </>
+            ),
             width: 150
-        },
+        }
     ];
 
     return (
         <div className="adminFilm">
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }} className="mb-6">
+            {/* Header */}
+            <div className="mb-6 flex justify-between items-center">
                 <h2 className="text-2xl uppercase font-bold">Quản lý Lịch Chiếu</h2>
                 <Button
-                    onClick={() => setCreateScheduleModal(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-2"
-                    aria-label="Add New Schedule"
+                    onClick={handleCreate}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
                 >
                     <FiPlus /> Thêm mới lịch chiếu
                 </Button>
             </div>
 
+            {/* Tìm kiếm */}
             <Search
                 className="mb-4"
                 placeholder="Tìm kiếm theo tên phim"
@@ -172,6 +147,7 @@ export default function ScheduleManagement() {
                 onSearch={searchKeyword}
             />
 
+            {/* Bảng */}
             <div className="overflow-x-auto">
                 <div className="min-w-[768px]">
                     <Table
@@ -182,15 +158,12 @@ export default function ScheduleManagement() {
                 </div>
             </div>
 
-            {/* Modal tạo lịch chiếu */}
+            {/* Modal Tạo / Sửa */}
             <CreateScheduleModal
-                isModalOpen={openCreateScheduleModal}
-                setIsModalOpen={setCreateScheduleModal}
-                movieOptions={data.map(schedule => ({
-                    label: schedule.movie.movieName,
-                    value: schedule.movie.id,
-                }))}
-                roomOptions={[{ label: "Phòng 1", value: 1 }, { label: "Phòng 2", value: 2 }]} // Cập nhật phòng chiếu nếu cần
+                isModalOpen={openModal}
+                setIsModalOpen={handleModalClose}
+                dataInit={editingSchedule}
+                onSuccess={() => handleModalClose(true)}
             />
         </div>
     );

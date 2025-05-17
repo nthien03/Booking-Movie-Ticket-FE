@@ -9,7 +9,7 @@ import Swal from 'sweetalert2'
 import { FiPlus, FiUpload } from "react-icons/fi";
 import CreateMovieModal from '../../../components/modal/CreateMovieModal';
 import axios from 'axios';
-import CreateScheduleModal from '../../../components/modal/CreateScheduleModal';
+import CreateScheduleModal from '../../../components/modal/ScheduleModal';
 
 const { Search } = Input;
 
@@ -37,7 +37,7 @@ export default function Film() {
 
     useEffect(() => {
         // URL API để lấy danh sách phim
-        axios.get('http://localhost:8080/movies') // Thay URL này với URL thực tế của bạn
+        axios.get('http://localhost:8080/api/v1/movies') // Thay URL này với URL thực tế của bạn
             .then(response => {
                 if (response.data) {
                     setData(response.data); // Cập nhật dữ liệu vào state
@@ -231,7 +231,7 @@ export default function Film() {
             setIsModalOpen={setOpenCreateMovieModal}
         />
 
-        <CreateScheduleModal
+        {/* <CreateScheduleModal
             isModalOpen={openCreateScheduleModal}
             setIsModalOpen={setCreateScheduleModal}
             movieOptions={data.map(film => ({
@@ -239,7 +239,7 @@ export default function Film() {
                 value: film.id,         // ID phim
             }))}
             roomOptions={defaultRoomOptions}
-        />
+        /> */}
 
 
         {/* <Table columns={columns} dataSource={data} rowKey='maPhim' /> */}
