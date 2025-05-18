@@ -5,6 +5,9 @@ import axios from 'axios'
 export default function MovieDetail() {
     const { id } = useParams()
     const [movie, setMovie] = useState(null)
+    const [showTrailer, setShowTrailer] = useState(false)
+    const [showSchedule, setShowSchedule] = useState(false)
+    const [schedules, setSchedules] = useState([])
 
     useEffect(() => {
         axios.get(`http://localhost:8080/api/v1/movies/${id}`)
@@ -12,7 +15,33 @@ export default function MovieDetail() {
             .catch((err) => console.error(err))
     }, [id])
 
+    const fetchSchedules = () => {
+        axios.get(`http://localhost:8080/api/v1/schedules/movie/${id}`)
+            .then((res) => {
+                setSchedules(res.data.data || [])
+                setShowSchedule(true)
+            })
+            .catch((err) => {
+                console.error('Failed to fetch schedules:', err)
+                setSchedules([])
+                setShowSchedule(true)
+            })
+    }
+
     if (!movie) return <div>Loading...</div>
+
+    const closeTrailerModal = () => setShowTrailer(false)
+    const closeScheduleModal = () => setShowSchedule(false)
+
+    const getEmbedUrl = (url) => {
+        if (url.includes('youtu.be')) {
+            const videoId = url.split('/').pop()
+            return `https://www.youtube.com/embed/${videoId}`
+        } else if (url.includes('watch?v=')) {
+            return url.replace('watch?v=', 'embed/')
+        }
+        return url
+    }
 
     return (
         <div
@@ -61,23 +90,70 @@ export default function MovieDetail() {
                             </div>
 
                             <div className="flex gap-4 mt-4">
-                                {/* <button className="bg-yellow-500 text-black px-4 py-2 rounded-full font-semibold">Chi tiết nội dung</button> */}
-                                <a
-                                    href={movie.trailerUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-base border border-yellow-500 text-yellow-500 px-4 py-2 rounded-full font-semibold"
+                                <button
+                                    onClick={() => setShowTrailer(true)}
+                                    className="text-base border border-green-400 text-green-400 px-4 py-2 rounded-full font-semibold"
                                 >
                                     Xem trailer
-                                </a>
+                                </button>
+                                <button
+                                    onClick={fetchSchedules}
+                                    className="text-base border border-sky-500 text-sky-500 px-4 py-2 rounded-full font-semibold"
+                                >
+                                    Đặt vé
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    {/* Các suất chiếu - có thể bỏ nếu chưa cần */}
-                    {/* <div className="mt-12"> ... </div> */}
                 </div>
             </div>
+
+            {showTrailer && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
+                    <div className="bg-black rounded-xl overflow-hidden max-w-3xl w-full relative">
+                        <button
+                            onClick={closeTrailerModal}
+                            className="absolute top-2 right-2 text-white text-2xl font-bold"
+                        >
+                            &times;
+                        </button>
+                        <div className="aspect-w-16 aspect-h-9">
+                            <iframe
+                                src={getEmbedUrl(movie.trailerUrl)}
+                                title="Trailer"
+                                allow="autoplay; encrypted-media"
+                                allowFullScreen
+                                className="w-full h-96"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showSchedule && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
+                    <div className="bg-black rounded-xl p-6 max-w-xl w-full relative">
+                        <button
+                            onClick={closeScheduleModal}
+                            className="absolute top-2 right-2 text-white text-2xl font-bold"
+                        >
+                            &times;
+                        </button>
+                        <h3 className="text-white text-xl font-semibold mb-4">Lịch chiếu phim</h3>
+                        <ul className="text-gray-300 space-y-2">
+                            {schedules.length > 0 ? (
+                                schedules.map((schedule, index) => (
+                                    <li key={index}>
+                                        {new Date(schedule.time).toLocaleString('vi-VN')}
+                                    </li>
+                                ))
+                            ) : (
+                                <li>Chưa có lịch chiếu</li>
+                            )}
+                        </ul>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
