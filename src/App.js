@@ -20,8 +20,22 @@ import AddNewUser from './pages/Admin/Users/AddNewUser';
 import EditUser from './pages/Admin/Users/EditUser';
 import ScheduleManagement from './pages/Admin/Schedule/ScheduleManagement';
 import MovieDetail from './pages/User/MovieDetail';
-
+import RoomManagement from './pages/Admin/Room/RoomManagement';
+import GenreManagement from './pages/Admin/Genre/GenreManagement';
+import { fetchAccount } from './redux/reducers/accountReducer';
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 function App() {
+
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            dispatch(fetchAccount());
+        }
+    }, [dispatch]);
+
     return (
         <HistoryRouter history={history}>
             <Routes>
@@ -43,8 +57,14 @@ function App() {
                     <Route index element={<Dashboard />} />
                     <Route path='user' element={<Users />} />
                     <Route path='user/addnewuser' element={<AddNewUser />} />
+
                     <Route path='user/edit/:taiKhoan' element={<EditUser />} />
+                    genres
                     <Route path='movie' element={<Film />} />
+                    <Route path='room' element={<RoomManagement />} />
+                    <Route path='genres' element={<GenreManagement />} />
+
+
                     <Route path='movie/edit/:id' element={<EditFilm />} />
                     <Route path='movie/showtime/:id/:tenPhim' element={<Showtime />} />
                     <Route path='schedule' element={<ScheduleManagement />} />

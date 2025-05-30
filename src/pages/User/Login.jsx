@@ -1,137 +1,122 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleUser, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import useRoute from '../../hooks/useRoute';
-import { getLocalStorage, setLocalStorage, SwalConfig } from '../../utils/config';
+import { notification } from 'antd';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { setStatusLogin } from '../../redux/reducers/UserReducer';
-import { history } from '../../utils/history';
-import { DangNhap } from '../../services/UserService';
-import { LOCALSTORAGE_USER } from '../../utils/constant';
-import NotFound from '../NotFound';
+import { setUserLoginInfo } from '../../redux/reducers/accountReducer';
+import { callLogin } from '../../utils/api';
 
 export default function Login() {
+    // Redux và điều hướng
     const dispatch = useDispatch();
-    const { navigate } = useRoute();
+    const navigate = useNavigate();
 
-    // Lấy trạng thái authentication từ Redux (giả sử có trong store)
-    const isAuthenticated = useSelector(state => state.user?.isLogin || false);
+    const isAuthenticated = useSelector(state => state.account?.isAuthenticated || false);
 
+
+    // State cho dữ liệu đăng nhập
     const [userLogin, setUserLogin] = useState({
         taiKhoan: '',
         matKhau: ''
     });
 
+    // State cho lỗi nhập liệu
     const [error, setError] = useState({
         taiKhoan: '',
         matKhau: ''
     });
 
-    // Thêm loading state và password visibility
+    // State xử lý hiển thị loading khi submit
     const [isSubmit, setIsSubmit] = useState(false);
+
+    // Hiện/ẩn mật khẩu
     const [showPassword, setShowPassword] = useState(false);
 
-    // Lấy callback URL từ query params
+    // Lấy callback URL từ query string nếu có
     const urlParams = new URLSearchParams(window.location.search);
     const callback = urlParams.get('callback');
 
-    // Authentication check với useEffect
+    // Kiểm tra nếu đã đăng nhập thì chuyển hướng
     useEffect(() => {
-        if (isAuthenticated || getLocalStorage(LOCALSTORAGE_USER)) {
-            // Hard redirect như file 2
+        if (isAuthenticated || localStorage.getItem('access_token')) {
             const redirectUrl = callback ? callback : '/';
-            window.location.href = redirectUrl;
+            navigate(redirectUrl, { replace: true });
         }
-    }, [isAuthenticated, callback]);
+    }, [isAuthenticated, callback, navigate]);
 
-    // Validation functions chi tiết hơn
+    // Hàm kiểm tra dữ liệu hợp lệ
     const validateField = (name, value) => {
-        switch (name) {
-            case 'taiKhoan':
-                if (!value.trim()) {
-                    return 'Tài khoản không được để trống';
-                } else if (value.includes(' ')) {
-                    return 'Tài khoản không được có khoảng cách';
-                }
-                return '';
-
-            case 'matKhau':
-                if (!value.trim()) {
-                    return 'Mật khẩu không được để trống';
-                } else if (value.length < 6) {
-                    return 'Mật khẩu phải có ít nhất 6 ký tự';
-                } else if (value.length > 50) {
-                    return 'Mật khẩu không được quá 50 ký tự';
-                }
-                return '';
-
-            default:
-                return '';
+        if (!value.trim()) {
+            return name === 'taiKhoan' ? 'Tài khoản không được để trống' : 'Mật khẩu không được để trống';
         }
+        return '';
     };
 
+    // Gọi API đăng nhập
     const callApiLogin = async (userLogin) => {
         setIsSubmit(true);
         try {
-            const apiLogin = await DangNhap(userLogin);
-
-            // Check response structure như file 2
+            const apiLogin = await callLogin(userLogin.taiKhoan, userLogin.matKhau);
             if (apiLogin?.data) {
-                setLocalStorage(LOCALSTORAGE_USER, apiLogin.data.content);
-                dispatch(setStatusLogin(true));
-                SwalConfig('Đăng nhập thành công!', 'success', false);
+                localStorage.setItem("access_token", apiLogin.data.access_token);
 
-                // Redirect với callback support
-                const redirectUrl = callback ? callback : '/';
-                window.location.href = redirectUrl;
+                dispatch(setUserLoginInfo(apiLogin.data.user));
+
+                notification.success({ message: 'Đăng nhập thành công!', duration: 2 });
+
+                setTimeout(() => {
+                    const redirectUrl = callback ? callback : '/';
+                    navigate(redirectUrl, { replace: true });
+                }, 500);
             } else {
-                // Handle case when no data returned
                 const errorMsg = apiLogin.message && Array.isArray(apiLogin.message)
                     ? apiLogin.message[0]
                     : apiLogin.message || 'Đăng nhập thất bại';
-                SwalConfig(errorMsg, 'error', true, 5000);
+
+                notification.error({
+                    message: 'Đăng nhập thất bại',
+                    description: errorMsg,
+                    duration: 4,
+                });
             }
         } catch (error) {
-            // Enhanced error handling
+            console.error('Login error:', error);
             let errorMessage = 'Đăng nhập thất bại';
-
             if (error.response?.data?.content) {
                 errorMessage = error.response.data.content;
             } else if (error.response?.data?.message) {
-                if (Array.isArray(error.response.data.message)) {
-                    errorMessage = error.response.data.message[0];
-                } else {
-                    errorMessage = error.response.data.message;
-                }
+                errorMessage = Array.isArray(error.response.data.message)
+                    ? error.response.data.message[0]
+                    : error.response.data.message;
             } else if (error.message) {
                 errorMessage = error.message;
             }
-
-            SwalConfig(errorMessage, 'error', true, 5000);
+            notification.error({
+                message: 'Đăng nhập thất bại',
+                description: errorMessage,
+                duration: 4,
+            });
         } finally {
             setIsSubmit(false);
         }
     };
 
+    // Xử lý thay đổi input
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-
-        // Update form data
-        setUserLogin((prev) => ({ ...prev, [name]: value }));
-
-        // Real-time validation
-        const fieldError = validateField(name, value);
-        setError((prev) => ({ ...prev, [name]: fieldError }));
+        setUserLogin(prev => ({ ...prev, [name]: value }));
+        if (error[name]) {
+            setError(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
+    // Xử lý khi submit form
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        const { taiKhoan, matKhau } = userLogin;
         let newErrors = { taiKhoan: '', matKhau: '' };
         let isValid = true;
 
-        // Validate all fields
         Object.keys(userLogin).forEach(field => {
             const fieldError = validateField(field, userLogin[field]);
             newErrors[field] = fieldError;
@@ -142,19 +127,17 @@ export default function Login() {
 
         if (isValid) {
             callApiLogin(userLogin);
-        } else {
-            SwalConfig('Vui lòng kiểm tra lại thông tin!', 'warning', false);
         }
     };
 
-    // Toggle password visibility
+    // Ẩn hiện mật khẩu
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
 
-    // Không render nếu đã authenticated (sẽ redirect ở useEffect)
-    if (isAuthenticated || getLocalStorage(LOCALSTORAGE_USER)) {
-        return null;
+    // Nếu đã xác thực thì chuyển hướng ngay lập tức
+    if (isAuthenticated || localStorage.getItem('access_token')) {
+        return <Navigate to={callback || '/'} replace />;
     }
 
     return (
@@ -166,7 +149,6 @@ export default function Login() {
                     <h2 className="text-xl font-bold">Đăng Nhập</h2>
                 </div>
 
-                {/* Tài khoản Input */}
                 <div className="form-control">
                     <input
                         placeholder="none"
@@ -183,7 +165,6 @@ export default function Login() {
                 </div>
                 <p className="form-err font-medium mb-4 mt-1 text-red-500">{error.taiKhoan}</p>
 
-                {/* Mật khẩu Input với icon mắt */}
                 <div className="form-control mt-6 relative">
                     <input
                         placeholder="none"
@@ -197,31 +178,24 @@ export default function Login() {
                         disabled={isSubmit}
                     />
                     <label className="form-label bg-white">Mật khẩu</label>
-
-                    {/* Toggle Password Visibility Button */}
                     <button
                         type="button"
                         onClick={togglePasswordVisibility}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none disabled:opacity-50"
                         disabled={isSubmit}
                     >
-                        <FontAwesomeIcon
-                            icon={showPassword ? faEyeSlash : faEye}
-                            className="w-4 h-4"
-                        />
+                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="w-4 h-4" />
                     </button>
                 </div>
                 <p className="form-err font-medium mb-4 mt-1 text-red-500">{error.matKhau}</p>
 
-                {/* Submit Button với Loading State */}
                 <div className="my-2 mt-4">
                     <button
                         type="submit"
                         disabled={isSubmit}
-                        className={`w-full py-4 font-bold text-sm leading-tight uppercase rounded shadow-md transition duration-150 ease-in-out
-                            ${isSubmit
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-red-600 hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg'
+                        className={`w-full py-4 font-bold text-sm leading-tight uppercase rounded shadow-md transition duration-150 ease-in-out ${isSubmit
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-red-600 hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg'
                             } text-white`}
                     >
                         {isSubmit ? (
@@ -238,7 +212,6 @@ export default function Login() {
                     </button>
                 </div>
 
-                {/* Register Link */}
                 <div className="text-right">
                     <span
                         onClick={() => !isSubmit && navigate('/register')}

@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { CapNhatThongTinNguoiDung, LayDanhSachLoaiNguoiDung, LayDanhSachNguoiDung, 
-        LayThongTinPhimNguoiDungEdit, LayThongTinTaiKhoan, XoaNguoiDung, ThemNguoiDungService } from '../../services/UserService';
+import {
+    CapNhatThongTinNguoiDung, LayDanhSachLoaiNguoiDung, LayDanhSachNguoiDung,
+    LayThongTinPhimNguoiDungEdit, LayThongTinTaiKhoan, XoaNguoiDung, ThemNguoiDungService
+} from '../../services/UserService';
 import { removeLocalStorage, SwalConfig } from '../../utils/config';
 import { LOCALSTORAGE_USER } from '../../utils/constant';
 import { history } from '../../utils/history';
@@ -91,7 +93,7 @@ export const callApiThongTinNguoiDungEdit = (taiKhoan) => async (dispatch) => {
     }
 }
 
-export const capNhatNguoiDung = (user) => async(dispatch) => {
+export const capNhatNguoiDung = (user) => async (dispatch) => {
     try {
         await CapNhatThongTinNguoiDung(user)
         SwalConfig('Cập nhật thành công', 'success', true)
