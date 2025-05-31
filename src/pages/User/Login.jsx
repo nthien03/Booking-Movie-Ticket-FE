@@ -217,7 +217,7 @@ export default function Login() {
                         onClick={() => !isSubmit && navigate('/register')}
                         className={`font-medium cursor-pointer ${isSubmit ? 'opacity-50 cursor-not-allowed' : 'text-black hover:text-black'}`}
                     >
-                        Bạn chưa có tài khoản ? <span className="text-red-600">Đăng ký ngay !</span>
+                        Bạn chưa có tài khoản ? <span className="text-red-600">Đăng ký ngay</span>
                     </span>
                 </div>
             </form>

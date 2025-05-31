@@ -135,6 +135,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
             onOk={() => form.submit()}
             confirmLoading={loading}
             okText={dataInit ? "Cập nhật" : "Lưu"}
+            cancelText="Hủy"
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
                 <Form.Item name="movieId" label="Phim" rules={[{ required: true }]}>
@@ -150,6 +151,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                 <Form.Item name="date" label="Ngày chiếu" rules={[{ required: true }]}>
                     <DatePicker
                         style={{ width: "100%" }}
+                        placeholder="Chọn ngày chiếu"
                         onChange={() => triggerRoomCheck()}
                     />
                 </Form.Item>
@@ -158,11 +160,12 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                     <TimePicker
                         format="HH:mm"
                         style={{ width: "100%" }}
+                        placeholder="Chọn giờ bắt đầu"
                         onChange={() => triggerRoomCheck()}
                     />
                 </Form.Item>
 
-                <Form.Item name="bufferTime" label="Buffer Time (phút)" rules={[{ required: true }]}>
+                <Form.Item name="bufferTime" label="Khoảng nghỉ (phút)" rules={[{ required: true }]}>
                     <InputNumber
                         style={{ width: "100%" }}
                         min={0}
@@ -181,7 +184,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                 </Form.Item>
 
                 <Form.Item name="status" label="Trạng thái" valuePropName="checked">
-                    <Switch checkedChildren="Mở" unCheckedChildren="Ẩn" />
+                    <Switch checkedChildren="Mở" unCheckedChildren="Tắt" />
                 </Form.Item>
             </Form>
         </Modal>

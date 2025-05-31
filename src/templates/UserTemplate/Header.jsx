@@ -1,23 +1,48 @@
 import React, { useEffect, useState } from 'react'
-import Swal from 'sweetalert2'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleUser, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons'
-import { Drawer, Space, Tooltip } from 'antd';
-import { getLocalStorage, removeLocalStorage, SwalConfig } from '../../utils/config'
+import { Drawer, Space, Tooltip, Avatar, Input } from 'antd';
+import { UserOutlined, LogoutOutlined, SearchOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux'
-import { setStatusLogin } from '../../redux/reducers/UserReducer'
-import { LOCALSTORAGE_USER } from '../../utils/constant'
-import logo_home from '../../assets/img/logo_home.png';
 
+import logo_home from '../../assets/img/logo_home.png';
+import { Dropdown, Menu } from 'antd';
 
 export default () => {
 
-    const isLogin = useSelector(state => state.UserReducer.isLogin)
+    const user = useSelector(state => state.account.user);
+    const isAuthenticated = useSelector(state => state.account.isAuthenticated);
+
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [open, setOpen] = useState(false);
+
+    const menu = (
+        <Menu
+            items={[
+                {
+                    key: 'logout',
+                    label: 'Đăng xuất',
+                    icon: <LogoutOutlined />,
+                    onClick: () => {
+                        // removeLocalStorage(LOCALSTORAGE_USER);
+                        // navigate('/login');
+                    },
+                },
+            ]}
+        />
+    );
+
+    const [search, setSearch] = useState('');
+
+    const handleSearch = () => {
+        if (search.trim()) {
+            navigate(`/search?keyword=${encodeURIComponent(search.trim())}`);
+        }
+    };
+
 
     // useEffect(() => {
 
@@ -83,34 +108,31 @@ export default () => {
                 }
             >
                 <div>
-                    {isLogin ? <>
-                        <NavLink to='/inforUser' className="flex flex-col items-center justify-center">
-                            <div className="relative">
-                                <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-600 border rounded-full border-gray-50" />
-                                <img src={`https://i.pravatar.cc/150?u=${getLocalStorage(LOCALSTORAGE_USER).taiKhoan}`} className="w-10 h-10 border rounded-full" />
+                    {isAuthenticated ? <>
+                        <Dropdown overlay={menu}>
+                            <div className="flex items-center gap-2 cursor-pointer text-base">
+                                <Avatar style={{ backgroundColor: '#66CCFF' }} icon={<UserOutlined />} />
+                                <span>{user?.fullName}</span>
                             </div>
-                            <div>
-                                <h5 className='m-0 pl-2 text-center'>{getLocalStorage(LOCALSTORAGE_USER).taiKhoan}</h5>
-                            </div>
-                        </NavLink>
+                        </Dropdown>
                         <Tooltip placement="bottom" title={text}>
                             <NavLink onClick={() => {
-                                Swal.fire({
-                                    title: 'Bạn có muốn đăng xuất không ?',
-                                    showDenyButton: true,
-                                    confirmButtonText: 'Đồng ý',
-                                    denyButtonText: 'Hủy',
-                                    icon: 'question',
-                                    iconColor: 'rgb(104 217 254)',
-                                    confirmButtonColor: '#f97316'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        SwalConfig('Đã đăng xuất', 'success', false)
-                                        removeLocalStorage(LOCALSTORAGE_USER)
-                                        dispatch(setStatusLogin(false))
-                                        navigate('/')
-                                    }
-                                })
+                                // Swal.fire({
+                                //     title: 'Bạn có muốn đăng xuất không ?',
+                                //     showDenyButton: true,
+                                //     confirmButtonText: 'Đồng ý',
+                                //     denyButtonText: 'Hủy',
+                                //     icon: 'question',
+                                //     iconColor: 'rgb(104 217 254)',
+                                //     confirmButtonColor: '#f97316'
+                                // }).then((result) => {
+                                //     if (result.isConfirmed) {
+                                //         SwalConfig('Đã đăng xuất', 'success', false)
+                                //         removeLocalStorage(LOCALSTORAGE_USER)
+                                //         dispatch(setStatusLogin(false))
+                                //         navigate('/')
+                                //     }
+                                // })
                             }} className='flex justify-center mt-2 items-center border-none ml-2'>
                                 <FontAwesomeIcon className='w-8 h-8' icon={faArrowRightFromBracket} />
                             </NavLink>
@@ -140,8 +162,11 @@ export default () => {
             </Drawer>
 
             <header className="bg-gray-400 font-sans leading-normal tracking-normal">
-                <nav style={{ borderBottom: '1px solid #c1c0c04a' }} id='navBarHeader' className="transition-all duration-500 flex items-center justify-between flex-wrap bg-white py-2 px-4 fixed w-full z-10 top-0">
-                    <div className="flex items-center flex-shrink-0 text-white mr-4">
+                <nav
+                    style={{ borderBottom: '1px solid #c1c0c04a' }}
+                    id='navBarHeader'
+                    className="transition-all duration-500 flex items-center justify-between flex-wrap bg-white py-2 px-4 fixed w-full z-10 top-0">
+                    <div className="flex items-center flex-shrink-0 text-white mr-4 ml-20">
                         <NavLink to='/' aria-label="Back to homepage" className="flex items-center">
                             <img src={logo_home} alt="logo_home" className="w-30 h-14 object-contain" />
                         </NavLink>
@@ -165,18 +190,34 @@ export default () => {
                                 <Link className="inline-block no-underline text-black font-medium md:text-base hover:text-red-600 hover:text-underline py-2 px-4"
                                     to="/#menuCinema">Lịch chiếu</Link>
                             </li>
-                            {/* <li className="mr-3">
+                            <li className="mr-3">
                                 <NavLink className="inline-block no-underline text-black font-medium md:text-base hover:text-red-600 hover:text-underline py-2 px-4"
-                                    to='news'>Tin tức</NavLink>
-                            </li> */}
+                                    to='news'>Giá vé</NavLink>
+                            </li>
                             <li className="mr-3">
                                 <NavLink className="inline-block no-underline text-black font-medium md:text-base hover:text-red-600 hover:text-underline py-2 px-4"
                                     to='aboutapp'>Giới thiệu</NavLink>
                             </li>
                         </ul>
                         <div className='flex text-gray-500'>
-                            {isLogin ? <>
-                                <NavLink to='/inforUser' className="flex flex-row items-center justify-center border-r-2 border-gray-300 pr-2">
+                            <Input
+                                className="w-64 h-10 px-3 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 mr-8"
+                                placeholder="Tìm phim theo tên..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onPressEnter={handleSearch}
+                                suffix={<SearchOutlined className="text-gray-500 text-lg" onClick={handleSearch} />}
+                            />
+
+
+                            {isAuthenticated ? <>
+                                <Dropdown overlay={menu}>
+                                    <div className="flex items-center gap-2 cursor-pointer text-base mr-20">
+                                        <Avatar style={{ backgroundColor: 'rgb(61, 149, 212)' }} icon={<UserOutlined />} />
+                                        <span>{user?.fullName}</span>
+                                    </div>
+                                </Dropdown>
+                                {/* <NavLink to='/inforUser' className="flex flex-row items-center justify-center border-r-2 border-gray-300 pr-2">
                                     <div className="relative">
                                         <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-600 border rounded-full border-gray-50" />
                                         <img src={`https://i.pravatar.cc/150?u=${getLocalStorage(LOCALSTORAGE_USER).taiKhoan}`} className="w-10 h-10 border rounded-full" />
@@ -184,33 +225,47 @@ export default () => {
                                     <div>
                                         <h5 className='m-0 pl-2 text-center'>{getLocalStorage(LOCALSTORAGE_USER).taiKhoan}</h5>
                                     </div>
-                                </NavLink>
-                                <Tooltip placement="bottomRight" title={text}>
+                                </NavLink> */}
+                                {/* <Tooltip placement="bottomRight" title={text}>
                                     <NavLink onClick={() => {
-                                        Swal.fire({
-                                            title: 'Bạn có muốn đăng xuất không ?',
-                                            showDenyButton: true,
-                                            confirmButtonText: 'Đồng ý',
-                                            denyButtonText: 'Hủy',
-                                            icon: 'question',
-                                            iconColor: 'rgb(104 217 254)',
-                                            confirmButtonColor: '#f97316'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                SwalConfig('Đã đăng xuất', 'success', false)
-                                                removeLocalStorage(LOCALSTORAGE_USER)
-                                                dispatch(setStatusLogin(false))
-                                                navigate('/')
-                                            }
-                                        })
+                                        // Swal.fire({
+                                        //     title: 'Bạn có muốn đăng xuất không ?',
+                                        //     showDenyButton: true,
+                                        //     confirmButtonText: 'Đồng ý',
+                                        //     denyButtonText: 'Hủy',
+                                        //     icon: 'question',
+                                        //     iconColor: 'rgb(104 217 254)',
+                                        //     confirmButtonColor: '#f97316'
+                                        // }).then((result) => {
+                                        //     if (result.isConfirmed) {
+                                        //         SwalConfig('Đã đăng xuất', 'success', false)
+                                        //         removeLocalStorage(LOCALSTORAGE_USER)
+                                        //         dispatch(setStatusLogin(false))
+                                        //         navigate('/')
+                                        //     }
+                                        // })
 
                                     }} className='border flex items-center border-none ml-2'>
                                         <FontAwesomeIcon className='w-8 h-8' icon={faArrowRightFromBracket} />
                                     </NavLink>
-                                </Tooltip>
+                                </Tooltip> */}
                             </> : <>
-                                <NavLink to='login' className=' mr-2 text-gray-500 hover:text-red-600 text-sm font-semibold border-orange-500 border-2 py-2 px-3 rounded-lg'>Đăng Nhập</NavLink>
-                                <NavLink to='register' className='text-gray-500 hover:text-red-600 text-sm font-semibold border-orange-500 border-2 py-2 px-3 rounded-lg'>Đăng Ký</NavLink>
+                                <div className="mr-20 flex items-center space-x-2">
+                                    <NavLink
+                                        to='login'
+                                        className='text-gray-500 hover:text-red-600 text-sm font-semibold py-2 px-3 rounded-lg'
+                                    >
+                                        Đăng Nhập
+                                    </NavLink>
+                                    <span className="text-gray-400">|</span>
+                                    <NavLink
+                                        to='register'
+                                        className='text-gray-500 hover:text-red-600 text-sm font-semibold py-2 px-3 rounded-lg'
+                                    >
+                                        Đăng Ký
+                                    </NavLink>
+                                </div>
+
                             </>}
                         </div>
                     </div>

@@ -1,49 +1,59 @@
-
-
 // src/redux/reducers/accountReducer.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { callFetchAccount } from '../../utils/api'; // Hàm gọi API lấy thông tin user
+import { callFetchAccount } from '../../utils/api';
 
 // Async thunk để gọi API lấy thông tin tài khoản
 export const fetchAccount = createAsyncThunk(
     'account/fetchAccount',
-    async () => {
-        const response = await callFetchAccount();
-        return response.data; // Giả sử response.data chứa thông tin user
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await callFetchAccount();
+            // Kiểm tra code thành công từ API
+            if (response.code === 1000) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.message || 'API error');
+            }
+        } catch (error) {
+            return rejectWithValue(error.message || 'Network error');
+        }
     }
 );
 
 // Khởi tạo state mặc định cho account
 const initialState = {
-    isAuthenticated: false,  // Trạng thái đã đăng nhập hay chưa
-    isLoading: true,         // Trạng thái đang tải thông tin tài khoản
-    isRefreshToken: false,   // Trạng thái làm mới token
-    errorRefreshToken: '',   // Lỗi nếu có khi refresh token
+    isAuthenticated: false,
+    isLoading: true,
+    isRefreshToken: false,
+    errorRefreshToken: '',
     user: {
         id: '',
         username: '',
         fullName: '',
         role: {
             id: '',
-            roleName: '',
-            permissions: [], // Danh sách quyền của user (mảng object)
+            roleName: '', // Đúng với API response
+            description: '',
+            status: false,
+            permissions: [],
         },
     },
-    activeMenu: 'home', // Mục menu đang active trong giao diện
+    activeMenu: 'home',
+    error: null, // Thêm để handle lỗi
 };
 
 const accountReducer = createSlice({
     name: 'account',
     initialState,
     reducers: {
-        // Set menu đang active (thường dùng để highlight menu trong UI)
         setActiveMenu: (state, action) => {
             state.activeMenu = action.payload;
         },
-        // Cập nhật thông tin user khi đăng nhập thành công
+        // Cập nhật để đúng với cấu trúc API
         setUserLoginInfo: (state, action) => {
             state.isAuthenticated = true;
             state.isLoading = false;
+            state.error = null;
 
             const payload = action.payload || {};
 
@@ -51,73 +61,92 @@ const accountReducer = createSlice({
             state.user.username = payload.username || '';
             state.user.fullName = payload.fullName || '';
 
-            // Cập nhật role và quyền hạn
-            state.user.role = payload.role || { id: '', roleName: '', permissions: [] };
-
-            // Đảm bảo permissions là mảng, tránh undefined
-            state.user.role.permissions = (payload.role && payload.role.permissions) || [];
+            // Cập nhật role đúng với API structure
+            if (payload.role) {
+                state.user.role = {
+                    id: payload.role.id || '',
+                    roleName: payload.role.roleName || '', // Đúng field name
+                    description: payload.role.description || '',
+                    status: payload.role.status || false,
+                    permissions: payload.role.permissions || [],
+                };
+            }
         },
-        // Logout: xóa access_token, reset trạng thái user
+        // Fix logout để reset đúng structure
         setLogoutAction: (state) => {
-            localStorage.removeItem('access_token'); // Xóa token khỏi localStorage
+            localStorage.removeItem('access_token');
             state.isAuthenticated = false;
             state.isLoading = false;
+            state.error = null;
             state.user = {
                 id: '',
-                email: '',
-                name: '',
+                username: '', // Đúng field name
+                fullName: '', // Đúng field name
                 role: {
                     id: '',
-                    name: '',
+                    roleName: '', // Đúng field name
+                    description: '',
+                    status: false,
                     permissions: [],
                 },
             };
         },
-        // Cập nhật trạng thái refresh token và lỗi nếu có
         setRefreshTokenAction: (state, action) => {
             const payload = action.payload || {};
             state.isRefreshToken = payload.status || false;
             state.errorRefreshToken = payload.message || '';
         },
+        // Thêm action để clear error
+        clearError: (state) => {
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
-        // Khi bắt đầu gọi API fetchAccount
         builder.addCase(fetchAccount.pending, (state) => {
             state.isLoading = true;
-            // Có thể reset trạng thái đăng nhập tạm thời khi load lại
-            state.isAuthenticated = false;
+            state.error = null;
+            state.isAuthenticated = false; // Cần reset cho F5/App initialization
         });
 
-        // Khi fetchAccount thành công
         builder.addCase(fetchAccount.fulfilled, (state, action) => {
             const payload = action.payload || {};
+            const user = payload.user || {};
+
             state.isAuthenticated = true;
             state.isLoading = false;
+            state.error = null;
 
-            state.user.id = payload.user?.id || '';
-            state.user.email = payload.user?.email || '';
-            state.user.name = payload.user?.name || '';
+            // Map đúng với API response structure
+            state.user.id = user.id || '';
+            state.user.username = user.username || '';
+            state.user.fullName = user.fullName || '';
 
-            state.user.role = payload.user?.role || { id: '', name: '', permissions: [] };
-            state.user.role.permissions = payload.user?.role?.permissions || [];
+            // Map role đúng với API response
+            if (user.role) {
+                state.user.role = {
+                    id: user.role.id || '',
+                    roleName: user.role.roleName || '', // Đúng field name từ API
+                    description: user.role.description || '',
+                    status: user.role.status || false,
+                    permissions: user.role.permissions || [],
+                };
+            }
         });
 
-        // Khi fetchAccount thất bại
-        builder.addCase(fetchAccount.rejected, (state) => {
+        builder.addCase(fetchAccount.rejected, (state, action) => {
             state.isAuthenticated = false;
             state.isLoading = false;
-            // Có thể thêm xử lý lỗi ở đây nếu muốn
+            state.error = action.payload || 'Failed to fetch account';
         });
     },
 });
 
-// Export actions để dispatch
 export const {
     setActiveMenu,
     setUserLoginInfo,
     setLogoutAction,
     setRefreshTokenAction,
+    clearError,
 } = accountReducer.actions;
 
-// Export reducer để đưa vào store
 export default accountReducer.reducer;

@@ -1,15 +1,14 @@
 import React, { useState } from 'react'
-import { Table, Input, Button, Tooltip, Modal, Form, Select, DatePicker, InputNumber, Upload, notification, Spin } from 'antd';
+import { Table, Input, Button, Tooltip, Tag, Modal, Form, Select, DatePicker, InputNumber, Upload, notification, Spin } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { callApiFilm, callApiXoaPhim } from '../../../redux/reducers/FilmReducer';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { EditOutlined, CalendarOutlined, EyeOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2'
 import { FiPlus, FiUpload } from "react-icons/fi";
 import CreateMovieModal from '../../../components/modal/CreateMovieModal';
 import axios from 'axios';
-import CreateScheduleModal from '../../../components/modal/ScheduleModal';
+import { SearchOutlined } from '@ant-design/icons';
+
 
 const { Search } = Input;
 
@@ -78,7 +77,7 @@ export default function Film() {
     }
     const columns = [
         {
-            title: 'Mã phim',
+            title: 'STT',
             dataIndex: 'id',
             sorter: (a, b) => a.id - b.id,
             sortDirections: ['descend'],
@@ -114,12 +113,28 @@ export default function Film() {
         {
             title: 'Thời lượng',
             dataIndex: 'duration',
-            render: (text, film) => film.duration,
+            render: (text, film) => `${film.duration} phút`,
         },
+
         {
             title: 'Ngày khởi chiếu',
             dataIndex: 'releaseDate',
-            render: (text, film) => new Date(film.releaseDate).toLocaleDateString(),
+            render: (text, film) => new Date(film.releaseDate).toLocaleDateString('vi-VN',
+                {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                }
+            ),
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => (
+                <Tag color={status ? 'green' : 'red'}>
+                    {status ? 'Hoạt động' : 'Không hoạt động'}
+                </Tag>
+            )
         },
         {
             title: 'Hành động',
@@ -154,7 +169,7 @@ export default function Film() {
                         <button
                             key={1}
                             onClick={() => setOpenViewMovieModal(true)}
-                            className="bg-dark text-green-600 mr-3 text-2xl"
+                            className="bg-dark text-green-600 mr-6 text-xl"
                         >
                             <EyeOutlined />
                         </button>
@@ -165,13 +180,13 @@ export default function Film() {
                         <button
                             key={2}
                             onClick={() => setOpenEditMovieModal(true)}
-                            className="bg-dark text-blue-600 mr-3 text-2xl"
+                            className="bg-dark text-blue-600 text-xl"
                         >
                             <EditOutlined />
                         </button>
                     </Tooltip>
 
-                    {/* Tạo lịch chiếu */}
+                    {/* Tạo lịch chiếu
                     <Tooltip placement="topRight" title={'Tạo lịch chiếu'}>
                         <button
                             key={3}
@@ -180,7 +195,7 @@ export default function Film() {
                         >
                             <CalendarOutlined />
                         </button>
-                    </Tooltip>
+                    </Tooltip> */}
 
                 </>
             },
@@ -198,7 +213,7 @@ export default function Film() {
 
             <Button
                 onClick={() => setOpenCreateMovieModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-2"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-2"
                 aria-label="Add New Movie"
             >
                 <FiPlus /> Thêm mới phim
@@ -209,7 +224,7 @@ export default function Film() {
         <Search
             className='mb-4'
             placeholder="Tìm kiếm theo tên"
-            enterButton='Search'
+            enterButton={<SearchOutlined />}
             size="large"
             onSearch={searchKeyword}
         />

@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import dayjs from 'dayjs'
+import 'dayjs/locale/vi'
+import ScheduleByMovieModal from '../../components/modal/ScheduleByMovieModal'
 
 export default function MovieDetail() {
     const { id } = useParams()
@@ -54,10 +57,9 @@ export default function MovieDetail() {
             }}
         >
             {/* overlay mờ */}
-            <div className="bg-black bg-opacity-80 w-full h-full px-6 py-24">
-                <div className="max-w-7xl mx-auto">
+            <div className="bg-black bg-opacity-70 w-full h-full px-6 py-24">
+                <div className="max-w-6xl mx-auto">
                     <div className="flex flex-col md:flex-row gap-8">
-                        {/* Poster thu nhỏ */}
                         <div className="w-full md:w-1/3">
                             <img
                                 src={`http://localhost:8080/storage/poster/${movie.poster}`}
@@ -66,39 +68,51 @@ export default function MovieDetail() {
                             />
                         </div>
 
-                        {/* Thông tin phim */}
                         <div className="flex-1 space-y-4">
-                            <h2 className="text-3xl font-bold uppercase text-white">
+                            <h2 className="text-2xl font-bold uppercase text-white">
                                 {movie.movieName}
                             </h2>
 
-                            <div className="text-base text-gray-300 space-y-1">
+                            <div className="text-sm text-gray-300 space-y-1">
                                 <p><span className="font-semibold">Thể loại:</span> {movie.genres.join(', ')}</p>
                                 <p><span className="font-semibold">Thời lượng:</span> {movie.duration} phút</p>
                                 <p><span className="font-semibold">Đạo diễn:</span> {movie.director}</p>
                                 <p><span className="font-semibold">Diễn viên:</span> {movie.actors.join(', ')}</p>
-                                <p><span className="font-semibold">Khởi chiếu:</span> {new Date(movie.releaseDate).toLocaleDateString('vi-VN')}</p>
+                                <p><span className="font-semibold">Khởi chiếu:</span> {new Date(movie.releaseDate).toLocaleDateString('vi-VN',
+                                    {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                    })}</p>
                             </div>
 
                             <div
-                                className="text-base text-gray-300 leading-relaxed"
+                                className="text-sm text-gray-300 leading-relaxed"
                                 dangerouslySetInnerHTML={{ __html: movie.description }}
                             />
 
-                            <div className="text-base text-red-500 font-medium">
-                                Kiểm duyệt: {movie.ageRestriction}+  Phim được phổ biến đến người từ đủ {movie.ageRestriction} tuổi trở lên
+                            <div className="text-sm text-orange-600">
+                                {movie.ageRestriction === 0
+                                    ? 'Kiểm duyệt: P - Phim được phép phổ biến đến người xem ở mọi độ tuổi.'
+                                    : `Kiểm duyệt: T${movie.ageRestriction} - Phim được phổ biến đến người xem từ đủ ${movie.ageRestriction} tuổi trở lên (${movie.ageRestriction}+)`}
                             </div>
+
 
                             <div className="flex gap-4 mt-4">
                                 <button
                                     onClick={() => setShowTrailer(true)}
-                                    className="text-base border border-green-400 text-green-400 px-4 py-2 rounded-full font-semibold"
+                                    className="mt-8 text-sm border border-yellow-600 text-yellow-600 px-4 py-2 rounded-full font-semibold transition-transform duration-200 hover:scale-110"
                                 >
                                     Xem trailer
                                 </button>
+
                                 <button
                                     onClick={fetchSchedules}
-                                    className="text-base border border-sky-500 text-sky-500 px-4 py-2 rounded-full font-semibold"
+                                    style={{
+                                        color: 'rgb(61, 149, 212)',
+                                        border: '1px solid rgb(61, 149, 212)',
+                                    }}
+                                    className="mt-8 text-sm px-4 py-2 rounded-full font-semibold transition-transform duration-200 hover:scale-110"
                                 >
                                     Đặt vé
                                 </button>
@@ -131,28 +145,10 @@ export default function MovieDetail() {
             )}
 
             {showSchedule && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
-                    <div className="bg-black rounded-xl p-6 max-w-xl w-full relative">
-                        <button
-                            onClick={closeScheduleModal}
-                            className="absolute top-2 right-2 text-white text-2xl font-bold"
-                        >
-                            &times;
-                        </button>
-                        <h3 className="text-white text-xl font-semibold mb-4">Lịch chiếu phim</h3>
-                        <ul className="text-gray-300 space-y-2">
-                            {schedules.length > 0 ? (
-                                schedules.map((schedule, index) => (
-                                    <li key={index}>
-                                        {new Date(schedule.time).toLocaleString('vi-VN')}
-                                    </li>
-                                ))
-                            ) : (
-                                <li>Chưa có lịch chiếu</li>
-                            )}
-                        </ul>
-                    </div>
-                </div>
+                <ScheduleByMovieModal
+                    schedules={schedules}
+                    onClose={closeScheduleModal}
+                />
             )}
         </div>
     )

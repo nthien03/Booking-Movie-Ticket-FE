@@ -333,13 +333,13 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                             label="Chọn ngày khởi chiếu"
                             rules={[{ required: true, message: "Vui lòng chọn ngày khởi chiếu" }]}
                         >
-                            <DatePicker className="w-full" />
+                            <DatePicker className="w-full" placeholder="Chọn ngày khởi chiếu" />
                         </Form.Item>
 
                         <Form.Item
                             name="duration"
                             label="Thời lượng (phút)"
-                            tooltip="Enter movie duration in minutes"
+                            rules={[{ required: true, message: "Vui lòng chọn ngày khởi chiếu" }]}
                         >
                             <InputNumber min={1} className="w-full" />
                         </Form.Item>
@@ -347,6 +347,7 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                         <Form.Item
                             name="ageRestriction"
                             label="Giới hạn độ tuổi"
+                            rules={[{ required: true, message: "Vui lòng chọn ngày khởi chiếu" }]}
                         >
                             <Select options={ageRestrictions} />
                         </Form.Item>

@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom'
 import useRoute from '../../hooks/useRoute'
 import axios from 'axios'
 
+
 export default function MovieList() {
     const [keyword, setKeyword] = useState('')
     const [filteredFilms, setFilteredFilms] = useState([])
@@ -106,8 +107,8 @@ export default function MovieList() {
     if (error) return <div className="text-center py-8 text-red-500">{error}</div>
 
     return (
-        <div id="movie-list" className="movie-list container mx-auto md:px-8 lg:px-10">
-            {/* Search input dùng chung cho desktop và mobile */}
+        <div id="movie-list" className="movie-list container mx-auto md:px-8 lg:px-10 mt-6">
+            {/* Search input dùng chung cho desktop và mobile
             <div className="bg-white rounded-lg shadow-2xl py-4 px-6 w-full md:w-3/4 xl:w-2/3 mx-auto -mt-10 z-10 mb-10 relative">
                 <form
                     onSubmit={handleSearch}
@@ -121,7 +122,7 @@ export default function MovieList() {
                         className="w-full p-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     />
                 </form>
-            </div>
+            </div> */}
 
             {/* Tabs cho desktop */}
             <Tabs

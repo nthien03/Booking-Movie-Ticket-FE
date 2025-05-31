@@ -3,10 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Carousel, Modal } from 'antd';
 import { getBannerMovie, getModalVideo } from '../../redux/reducers/BannerReducer';
 
-import avatar from '../../assets/img/avatar.jpg'
-import onepiece from '../../assets/img/onepiece.jpg'
-import pussInBoots from '../../assets/img/pussInBoots.jpg'
-import logo_client from '../../assets/img/logo_client.png';
 
 export default function HomeCarousel() {
     const dataBanner = useSelector(state => state.BannerReducer.data)
@@ -29,22 +25,22 @@ export default function HomeCarousel() {
             {
                 maBanner: 1,
                 link: 'https://youtu.be/Iwg6nQxN51I',
-                img: 'https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2FBanner%2F0018533.jpg&w=1920&q=75'
+                img: 'https://cdn.galaxycine.vn/media/2025/5/9/mi8-2048_1746763282349.jpg'
             },
             {
                 maBanner: 2,
                 link: 'https://youtu.be/sK3xHX-E4RQ',
-                img: "https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2FBanner%2F0018562.jpg&w=1920&q=75"
+                img: "https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2FBanner%2F0018636.png&w=1920&q=75"
             },
             {
                 maBanner: 3,
                 link: 'https://youtu.be/6gMUavMk2Zg',
-                img: 'http://localhost:8080/storage/poster/1747505193600-ba-mat-lat-keo.jpg'
+                img: 'https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2FBanner%2F0018658.png&w=1920&q=75'
             },
             {
                 maBanner: 4,
                 link: 'https://youtu.be/IrEin0s_0Ik',
-                img: 'http://localhost:8080/storage/poster/1747506625176-quai-thu-dai-nao-so-thu.jpg'
+                img: 'https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2FBanner%2F0018658.png&w=1920&q=75'
             }
 
 

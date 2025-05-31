@@ -2,20 +2,35 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, SnippetsOutlined, FileAddOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { getLocalStorage, removeLocalStorage } from '../../utils/config';
-import { LOCALSTORAGE_USER } from '../../utils/constant';
 import useRoute from '../../hooks/useRoute';
-import { LayThongTinTaiKhoan } from '../../services/UserService';
 import LoadingPage from '../../pages/LoadingPage';
-import NotFound from '../../pages/NotFound';
 import logo from '../../assets/img/logo.png';
+import { useSelector } from 'react-redux';
+import { Avatar, Dropdown } from 'antd';
+import { LogoutOutlined, ScheduleOutlined, DesktopOutlined, HomeOutlined, UnorderedListOutlined } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 
+const menu = (
+    <Menu
+        items={[
+            {
+                key: 'logout',
+                label: 'Đăng xuất',
+                icon: <LogoutOutlined />,
+                onClick: () => {
+                    // removeLocalStorage(LOCALSTORAGE_USER);
+                    // navigate('/login');
+                },
+            },
+        ]}
+    />
+);
 export default function AdminTemplate() {
     const [collapsed, setCollapsed] = useState(false);
     const { navigate } = useRoute()
     const [isLoading, setIsLoading] = useState(true)
+    const user = useSelector(state => state.account.user);
 
     useEffect(() => {
         // const token = getLocalStorage(LOCALSTORAGE_USER)
@@ -82,44 +97,104 @@ export default function AdminTemplate() {
                                 items={[
                                     {
                                         key: '1',
+                                        icon: <HomeOutlined />,
+                                        label: <NavLink to='schedule'>Trang chủ</NavLink>,
+                                    },
+                                    {
+                                        key: '2',
                                         icon: <UserOutlined />,
-                                        label: 'Người dùng',
+                                        label: 'Quản lý người dùng',
                                         children: [{
-                                            key: '11',
+                                            key: '21',
                                             icon: <SnippetsOutlined />,
                                             label: <NavLink to='user'>Quản lý người dùng</NavLink>,
                                         },
                                         {
-                                            key: '12',
+                                            key: '22',
                                             icon: <FileAddOutlined />,
                                             label: <NavLink to='user/addnewuser'>Add User</NavLink>,
                                         },
                                         ]
                                     },
                                     {
-                                        key: '2',
+                                        key: '3',
                                         icon: <SnippetsOutlined />,
-                                        label: <NavLink to='movie'>Quản lý phim</NavLink>,
+                                        label: 'Quản lý phim',
+                                        children: [{
+                                            key: '31',
+                                            icon: <SnippetsOutlined />,
+                                            label: <NavLink to='movie'>Danh sách phim</NavLink>,
+                                        },
+                                        {
+                                            key: '32',
+                                            icon: <FileAddOutlined />,
+                                            label: <NavLink to='actors'>Quản lý diễn viên</NavLink>,
+                                        },
+                                        {
+                                            key: '33',
+                                            icon: <FileAddOutlined />,
+                                            label: <NavLink to='genres'>Quản lý thể loại</NavLink>,
+                                        },
+                                        ]
 
                                     },
 
                                     {
-                                        key: '3',
-                                        icon: <SnippetsOutlined />,
+                                        key: '4',
+                                        icon: <ScheduleOutlined />,
                                         label: <NavLink to='schedule'>Quản lý lịch chiếu</NavLink>,
 
                                     },
+
+                                    {
+                                        key: '5',
+                                        icon: <DesktopOutlined />,
+                                        label: 'Quản lý phòng chiếu',
+                                        children: [{
+                                            key: '51',
+                                            icon: <SnippetsOutlined />,
+                                            label: <NavLink to='room'>Danh sách phòng chiếu</NavLink>,
+                                        },
+                                        {
+                                            key: '52',
+                                            icon: <FileAddOutlined />,
+                                            label: <NavLink to='actors'>Quản lý diễn viên</NavLink>,
+                                        },
+                                        {
+                                            key: '53',
+                                            icon: <FileAddOutlined />,
+                                            label: <NavLink to='genres'>Quản lý thể loại</NavLink>,
+                                        },
+                                        ]
+
+                                    },
+                                    {
+                                        key: '6',
+                                        icon: <UnorderedListOutlined />,
+                                        label: <NavLink to='room'>Quản lý đơn đặt vé</NavLink>,
+
+                                    },
+
 
                                 ]}
                             />
                         </Sider>
                         <Layout className="site-layout">
-                            <Header className="site-layout-background pl-4 text-[1.8rem]">
+                            <Header className="site-layout-background pl-4 pr-4 flex justify-between items-center text-[1.8rem]">
                                 {React.createElement(collapsed ? MenuUnfoldOutlined : MenuFoldOutlined, {
                                     className: 'trigger',
                                     onClick: () => setCollapsed(!collapsed),
                                 })}
+
+                                {/* Hiển thị tên người dùng */}
+                                <Dropdown overlay={menu}>
+                                    <div className="flex items-center gap-2 cursor-pointer text-base">
+                                        <Avatar style={{ backgroundColor: 'rgb(61, 149, 212)' }} icon={<UserOutlined />} />
+                                        <span>{user?.fullName}</span>
+                                    </div>
+                                </Dropdown>
                             </Header>
+
                             <Content
                                 className="site-layout-background contentAdmin"
                                 style={{

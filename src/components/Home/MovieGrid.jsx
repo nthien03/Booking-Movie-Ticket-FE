@@ -23,12 +23,16 @@ export default function MovieGrid({ arrFilm = [] }) {
         const imageUrl = image.startsWith('http')
           ? image
           : `http://localhost:8080/storage/poster/${image}`
-        const formattedDate = releaseDate ? new Date(releaseDate).toLocaleDateString('vi-VN') : ''
+        const formattedDate = releaseDate ? new Date(releaseDate).toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }) : ''
 
         return (
           <div
             key={index}
-            className="cursor-pointer flex flex-col items-center w-full max-w-[250px] mx-auto"
+            className="cursor-pointer flex flex-col w-full max-w-[250px] mx-auto"
           >
             <div
               className="w-full aspect-[3/4] overflow-hidden rounded-lg"
@@ -44,19 +48,20 @@ export default function MovieGrid({ arrFilm = [] }) {
                 }}
               />
             </div>
-            <h2 className="text-sm font-bold uppercase text-center mt-2 line-clamp-2 leading-tight min-h-[40px]">
+            <h2 className="text-sm font-bold uppercase text-left mt-3 line-clamp-2 leading-tight min-h-[35px]">
               {title}
             </h2>
-            <div className="text-s text-gray-800 leading-snug text-center mt-1">
+
+            <div className="text-s text-gray-800 leading-snug text-left mt-2">
               <div><span className="font-semibold">Thời lượng:</span> {formatDuration(duration)}</div>
               <div><span className="font-semibold">Khởi chiếu:</span> {formattedDate}</div>
             </div>
-            <button
+            {/* <button
               onClick={() => navigate(`detail/${id}`)}
               className="mt-2 w-full py-1 bg-sky-500 hover:bg-sky-600 text-white text-base font-semibold rounded transition duration-300"
             >
               Đặt vé
-            </button>
+            </button> */}
           </div>
         )
       })}
