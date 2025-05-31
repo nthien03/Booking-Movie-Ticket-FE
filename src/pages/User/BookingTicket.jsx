@@ -256,88 +256,66 @@
 //     </>;
 // }
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import axios from 'axios';
 
 export default function BookingPage() {
-    // Mock data cho schedule và movie
-    const mockSchedule = {
-        id: 1,
-        date: '2025-05-31',
-        startTime: '2025-05-31T19:30:00',
-        endTime: '2025-05-31T21:30:00',
-        room: {
-            id: 1,
-            room_name: 'Phòng 1',
-            status: 'active'
-        },
-        movie: {
-            id: 1,
-            title: 'Spider-Man: No Way Home',
-            duration: 148,
-            genre: 'Hành động, Khoa học viễn tưởng'
-        }
-    };
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    // Mock data cho ghế
-    const mockSeats = [
-        // Hàng A - VIP
-        { id: 1, seat_number: 'A1', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 2, seat_number: 'A2', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 3, seat_number: 'A3', row: 'A', price: 120000, status: 'booked', seat_type: 'VIP' },
-        { id: 4, seat_number: 'A4', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 5, seat_number: 'A5', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 6, seat_number: 'A6', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 7, seat_number: 'A7', row: 'A', price: 120000, status: 'booked', seat_type: 'VIP' },
-        { id: 8, seat_number: 'A8', row: 'A', price: 120000, status: 'available', seat_type: 'VIP' },
-
-        // Hàng B - VIP
-        { id: 9, seat_number: 'B1', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 10, seat_number: 'B2', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 11, seat_number: 'B3', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 12, seat_number: 'B4', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 13, seat_number: 'B5', row: 'B', price: 120000, status: 'booked', seat_type: 'VIP' },
-        { id: 14, seat_number: 'B6', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 15, seat_number: 'B7', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-        { id: 16, seat_number: 'B8', row: 'B', price: 120000, status: 'available', seat_type: 'VIP' },
-
-        // Hàng C - Standard
-        { id: 17, seat_number: 'C1', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 18, seat_number: 'C2', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 19, seat_number: 'C3', row: 'C', price: 80000, status: 'booked', seat_type: 'Standard' },
-        { id: 20, seat_number: 'C4', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 21, seat_number: 'C5', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 22, seat_number: 'C6', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 23, seat_number: 'C7', row: 'C', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 24, seat_number: 'C8', row: 'C', price: 80000, status: 'booked', seat_type: 'Standard' },
-
-        // Hàng D - Standard
-        { id: 25, seat_number: 'D1', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 26, seat_number: 'D2', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 27, seat_number: 'D3', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 28, seat_number: 'D4', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 29, seat_number: 'D5', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 30, seat_number: 'D6', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 31, seat_number: 'D7', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 32, seat_number: 'D8', row: 'D', price: 80000, status: 'available', seat_type: 'Standard' },
-
-        // Hàng E - Standard
-        { id: 33, seat_number: 'E1', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 34, seat_number: 'E2', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 35, seat_number: 'E3', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 36, seat_number: 'E4', row: 'E', price: 80000, status: 'booked', seat_type: 'Standard' },
-        { id: 37, seat_number: 'E5', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 38, seat_number: 'E6', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 39, seat_number: 'E7', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-        { id: 40, seat_number: 'E8', row: 'E', price: 80000, status: 'available', seat_type: 'Standard' },
-    ];
+    // Lấy dữ liệu từ state navigation
+    const { schedule, movie } = location.state || {};
 
     const [activeTab, setActiveTab] = useState('seat-selection');
     const [selectedSeats, setSelectedSeats] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [seats, setSeats] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    // Redirect nếu không có dữ liệu
+    useEffect(() => {
+        if (!schedule || !movie) {
+            navigate('/');
+            return;
+        }
+
+        // Fetch seats data
+        fetchSeats();
+    }, [schedule, movie, navigate]);
+
+    const fetchSeats = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`http://localhost:8080/api/v1/seats/room/${schedule.room.id}`);
+
+            if (response.data.code === 1000) {
+                // Transform API data to match component format
+                const transformedSeats = response.data.data.map(seat => ({
+                    id: seat.id,
+                    seat_number: `${seat.seatRow}${seat.seatNumber}`,
+                    row: seat.seatRow,
+                    price: seat.price,
+                    status: seat.status ? 'available' : 'booked',
+                    seat_type: seat.seatType.seatTypeName === 'Thường' ? 'Standard' : 'VIP'
+                }));
+
+                setSeats(transformedSeats);
+            } else {
+                setError('Không thể tải dữ liệu ghế');
+            }
+        } catch (err) {
+            console.error('Error fetching seats:', err);
+            setError('Lỗi kết nối với server');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Nhóm ghế theo hàng
-    const groupedSeats = mockSeats.reduce((acc, seat) => {
+    const groupedSeats = seats.reduce((acc, seat) => {
         if (!acc[seat.row]) acc[seat.row] = [];
         acc[seat.row].push(seat);
         return acc;
@@ -400,7 +378,7 @@ export default function BookingPage() {
             return;
         }
 
-        alert(`Thanh toán thành công!\nPhim: ${mockSchedule.movie.title}\nGhế: ${selectedSeats.map(s => s.seat_number).join(', ')}\nTổng tiền: ${formatPrice(totalPrice)}\nPhương thức: ${paymentMethod}`);
+        alert(`Thanh toán thành công!\nPhim: ${movie.movieName}\nGhế: ${selectedSeats.map(s => s.seat_number).join(', ')}\nTổng tiền: ${formatPrice(totalPrice)}\nPhương thức: ${paymentMethod}`);
     };
 
     const paymentMethods = [
@@ -410,12 +388,41 @@ export default function BookingPage() {
         { id: 'cash', name: 'Tiền mặt tại quầy', icon: '💵' }
     ];
 
+    // Show loading or error states
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Đang tải dữ liệu ghế...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 text-lg">{error}</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Quay về trang chủ
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
-            Header
+            {/* Header */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-6xl mx-auto px-4 py-4">
-
+                    <h1 className="text-2xl font-bold text-gray-800">Đặt Vé Xem Phim</h1>
+                    <p className="text-gray-600 mt-1">{movie.movieName}</p>
                 </div>
             </div>
 
@@ -450,12 +457,13 @@ export default function BookingPage() {
                     <div className="bg-white rounded-lg shadow-sm p-8">
                         {/* Movie Info */}
                         <div className="mb-8 pb-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">{mockSchedule.movie.title}</h2>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">{movie.movieName}</h2>
                             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                <span>📅 {dayjs(mockSchedule.date).format('DD/MM/YYYY')}</span>
-                                <span>🕐 {dayjs(mockSchedule.startTime).format('HH:mm')} - {dayjs(mockSchedule.endTime).format('HH:mm')}</span>
-                                <span>🏠 {mockSchedule.room.room_name}</span>
-                                <span>⏱️ {mockSchedule.movie.duration} phút</span>
+                                <span>📅 {dayjs(schedule.date).format('DD/MM/YYYY')}</span>
+                                <span>🕐 {dayjs(schedule.startTime).format('HH:mm')}</span>
+                                <span>🏠 {schedule.room.room_name}</span>
+                                <span>⏱️ {movie.duration} phút</span>
+                                <span>🎭 {movie.genres?.join(', ')}</span>
                             </div>
                         </div>
 
@@ -556,17 +564,17 @@ export default function BookingPage() {
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Tên phim:</span>
-                                        <span className="font-medium">{mockSchedule.movie.title}</span>
+                                        <span className="font-medium">{movie.movieName}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Suất chiếu:</span>
                                         <span className="font-medium">
-                                            {dayjs(mockSchedule.date).format('DD/MM/YYYY')} - {dayjs(mockSchedule.startTime).format('HH:mm')}
+                                            {dayjs(schedule.date).format('DD/MM/YYYY')} - {dayjs(schedule.startTime).format('HH:mm')}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Phòng:</span>
-                                        <span className="font-medium">{mockSchedule.room.room_name}</span>
+                                        <span className="font-medium">{schedule.room.room_name}</span>
                                     </div>
                                 </div>
                             </div>
