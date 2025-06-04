@@ -23,3 +23,10 @@ export const callRefreshToken = () => {
 export const callLogout = () => {
     return axios.post('/api/v1/auth/logout');
 };
+
+
+/**
+ * Module Booking
+ */
+
+

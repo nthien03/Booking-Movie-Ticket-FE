@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleUser, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { Drawer, Space, Tooltip, Avatar, Input } from 'antd';
-import { UserOutlined, LogoutOutlined, SearchOutlined } from '@ant-design/icons';
+import { UserOutlined, LogoutOutlined, SearchOutlined, DesktopOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux'
 
 import logo_home from '../../assets/img/logo_home.png';
@@ -30,6 +30,16 @@ export default () => {
                         // removeLocalStorage(LOCALSTORAGE_USER);
                         // navigate('/login');
                     },
+                },
+                {
+                    key: 'profile',
+                    label: <NavLink to='/info'>Thông tin cá nhân</NavLink>,
+                    icon: <UserOutlined />,
+                },
+                {
+                    key: 'booking',
+                    label: <NavLink to='/bookings/history'>Lịch sử đặt vé</NavLink>,
+                    icon: <DesktopOutlined />,
                 },
             ]}
         />

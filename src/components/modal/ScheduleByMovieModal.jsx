@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 
-export default function ScheduleByMovieModal({ schedules, onClose }) {
+export default function ScheduleByMovieModal({ schedules, onClose, movieData }) {
+    const navigate = useNavigate();
+
     // Nhóm lịch chiếu theo ngày
     const groupedSchedules = schedules.reduce((acc, schedule) => {
         const dateObj = dayjs(schedule.date);
@@ -15,24 +18,11 @@ export default function ScheduleByMovieModal({ schedules, onClose }) {
         if (!acc[dateKey]) acc[dateKey] = [];
         acc[dateKey].push(schedule);
         return acc;
-
-        // const date = schedule.date ? new Date(schedule.date).toLocaleDateString('vi-VN') : ''
-        // console.log(date)
-        // if (!acc[date]) acc[date] = []
-        // acc[date].push(schedule)
-        // return acc
     }, {})
 
     const formatDateDisplay = (dateKey) => {
         // Parse lại từ format "31/05/2025"
         const d = dayjs(dateKey, 'DD/MM/YYYY', true).hour(12);
-
-        // console.log('------------------------');
-        // console.log('dateKey:', dateKey);             // chuỗi gốc
-        // console.log('Parsed dayjs:', d.toString());   // để xem thực tế nó parse ra ngày gì
-        // console.log('isValid:', d.isValid());         // xem có đúng format không
-        // console.log('format DD/MM:', d.format('DD/MM'));
-        // console.log('------------------------');
 
         const isToday = d.isSame(dayjs(), 'day');
         const dayName = isToday ? 'Hôm Nay' : d.format('dddd');
@@ -47,8 +37,32 @@ export default function ScheduleByMovieModal({ schedules, onClose }) {
         const dateB = dayjs(b, 'DD/MM/YYYY');
         return dateA.isAfter(dateB) ? 1 : -1;
     });
-    console.log('Dates:', dates);
+
     const [selectedDate, setSelectedDate] = useState(dates[0] || '');
+
+    const handleScheduleSelect = (schedule) => {
+        // Tạo state để truyền sang BookingPage
+        const bookingData = {
+            schedule: {
+                id: schedule.id,
+                date: schedule.date,
+                startTime: schedule.startTime,
+                room: {
+                    id: schedule.room.id,
+                    room_name: schedule.room.roomName
+                }
+            },
+            movie: movieData
+        };
+
+        // Navigate đến BookingPage với state
+        navigate('/booking', {
+            state: bookingData
+        });
+
+        // Đóng modal
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
@@ -63,9 +77,7 @@ export default function ScheduleByMovieModal({ schedules, onClose }) {
                 {/* Tabs chọn ngày */}
                 <div className="flex gap-3 overflow-x-auto mb-6 pb-1">
                     {dates.map(date => {
-                        //console.log('Processing date:', date);
                         const { dayName, dayDate } = formatDateDisplay(date);
-                        //console.log('Formatted date:', date, 'Day name:', dayName, 'Day date:', dayDate);
                         const isSelected = selectedDate === date;
 
                         return (
@@ -92,6 +104,7 @@ export default function ScheduleByMovieModal({ schedules, onClose }) {
                                 {groupedSchedules[selectedDate].map(sch => (
                                     <button
                                         key={sch.id}
+                                        onClick={() => handleScheduleSelect(sch)}
                                         className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-[rgb(61,149,212)] hover:text-white transition"
                                     >
                                         {dayjs(sch.startTime).format('HH:mm')}
@@ -103,7 +116,5 @@ export default function ScheduleByMovieModal({ schedules, onClose }) {
                 </div>
             </div>
         </div>
-
-
     );
 }

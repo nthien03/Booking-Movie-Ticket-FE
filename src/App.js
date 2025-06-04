@@ -8,7 +8,6 @@ import Home from './pages/User/Home';
 import InforUser from './pages/User/InforUser';
 import Detail from './pages/User/Detail';
 import NotFound from './pages/NotFound';
-import BookingTicket from './pages/User/BookingTicket';
 import Dashboard from './pages/Admin/Dashboard';
 import Film from './pages/Admin/Film/Film';
 import Users from './pages/Admin/Users/Users'
@@ -21,6 +20,10 @@ import GenreManagement from './pages/Admin/Genre/GenreManagement';
 import { fetchAccount } from './redux/reducers/accountReducer';
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import BookingPage from './pages/User/BookingPage';
+import BookingManagement from './pages/Admin/Booking/BookingManagement';
+import BookingHistory from './pages/User/BookingHistory';
+import UserInfo from './pages/User/UserInfo';
 function App() {
 
     const dispatch = useDispatch();
@@ -41,10 +44,11 @@ function App() {
                     <Route path='notfound' element={<NotFound />} />
                     <Route path='detail/:id' element={<Detail />} />
                     <Route path='movies/:id' element={<MovieDetail />} />
-                    <Route path='inforUser' element={<InforUser />} />
+                    <Route path='info' element={<UserInfo />} />
                     <Route path='login' element={<Login />} />
                     <Route path='register' element={<Register />} />
-                    <Route path='booking' element={<BookingTicket />} />
+                    <Route path='booking' element={<BookingPage />} />
+                    <Route path='bookings/history' element={<BookingHistory />} />
                 </Route>
                 <Route path='/admin' element={<AdminTemplate />}>
                     {/* <Route path='/admin' index element={<Dashboard />} /> */}
@@ -59,6 +63,8 @@ function App() {
                     <Route path='genres' element={<GenreManagement />} />
 
                     <Route path='schedule' element={<ScheduleManagement />} />
+                    <Route path='bookings' element={<BookingManagement />} />
+
                 </Route>
             </Routes>
         </HistoryRouter>

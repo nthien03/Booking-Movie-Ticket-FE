@@ -171,7 +171,7 @@ export default function AdminTemplate() {
                                     {
                                         key: '6',
                                         icon: <UnorderedListOutlined />,
-                                        label: <NavLink to='room'>Quản lý đơn đặt vé</NavLink>,
+                                        label: <NavLink to='bookings'>Quản lý đơn đặt vé</NavLink>,
 
                                     },
 

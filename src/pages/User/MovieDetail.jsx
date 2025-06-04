@@ -97,7 +97,6 @@ export default function MovieDetail() {
                                     : `Kiểm duyệt: T${movie.ageRestriction} - Phim được phổ biến đến người xem từ đủ ${movie.ageRestriction} tuổi trở lên (${movie.ageRestriction}+)`}
                             </div>
 
-
                             <div className="flex gap-4 mt-4">
                                 <button
                                     onClick={() => setShowTrailer(true)}
@@ -147,6 +146,7 @@ export default function MovieDetail() {
             {showSchedule && (
                 <ScheduleByMovieModal
                     schedules={schedules}
+                    movieData={movie}
                     onClose={closeScheduleModal}
                 />
             )}

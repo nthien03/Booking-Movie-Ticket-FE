@@ -13,7 +13,7 @@ export default function Login() {
     const navigate = useNavigate();
 
     const isAuthenticated = useSelector(state => state.account?.isAuthenticated || false);
-
+    console.log('isAuthenticated', isAuthenticated);
 
     // State cho dữ liệu đăng nhập
     const [userLogin, setUserLogin] = useState({
@@ -39,7 +39,7 @@ export default function Login() {
 
     // Kiểm tra nếu đã đăng nhập thì chuyển hướng
     useEffect(() => {
-        if (isAuthenticated || localStorage.getItem('access_token')) {
+        if (isAuthenticated) {
             const redirectUrl = callback ? callback : '/';
             navigate(redirectUrl, { replace: true });
         }
@@ -136,16 +136,16 @@ export default function Login() {
     };
 
     // Nếu đã xác thực thì chuyển hướng ngay lập tức
-    if (isAuthenticated || localStorage.getItem('access_token')) {
+    if (isAuthenticated) {
         return <Navigate to={callback || '/'} replace />;
     }
 
     return (
         <div className="login">
             <div className="login__overlay"></div>
-            <form onSubmit={handleSubmit} className="form rounded-lg bg-white p-2 sm:p-4 md:p-8">
+            <form onSubmit={handleSubmit} className="form rounded-lg bg-white p-2 sm:p-4 md:p-8 max-w-[30rem] w-full mx-auto">
                 <div className="text-center mb-6">
-                    <FontAwesomeIcon className="w-10 h-10 text-orange-500" icon={faCircleUser} />
+                    <FontAwesomeIcon className="w-10 h-10 text-[#3d95d4]" icon={faCircleUser} />
                     <h2 className="text-xl font-bold">Đăng Nhập</h2>
                 </div>
 
@@ -195,7 +195,7 @@ export default function Login() {
                         disabled={isSubmit}
                         className={`w-full py-4 font-bold text-sm leading-tight uppercase rounded shadow-md transition duration-150 ease-in-out ${isSubmit
                             ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-red-600 hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg'
+                            : 'bg-[#3d95d4] hover:bg-[#3384c3] hover:shadow-lg focus:bg-[#3384c3] focus:shadow-lg focus:outline-none focus:ring-0 active:bg-[#2a7bb3] active:shadow-lg'
                             } text-white`}
                     >
                         {isSubmit ? (
@@ -210,6 +210,7 @@ export default function Login() {
                             'Đăng Nhập'
                         )}
                     </button>
+
                 </div>
 
                 <div className="text-right">
