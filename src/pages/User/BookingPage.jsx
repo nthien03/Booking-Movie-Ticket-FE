@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import axios from 'axios';
+import { callSeat } from '../../utils/api';
 
 export default function BookingPage() {
     const location = useLocation();
@@ -32,17 +32,17 @@ export default function BookingPage() {
     const fetchSeats = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`http://localhost:8080/api/v1/seats/room/${schedule.room.id}`);
+            const response = await callSeat(schedule.room.id);
 
-            if (response.data.code === 1000) {
+            if (response.code === 1000) {
                 // Transform API data to match component format
-                const transformedSeats = response.data.data.map(seat => ({
+                const transformedSeats = response.data.map(seat => ({
                     id: seat.id,
                     seat_number: `${seat.seatRow}${seat.seatNumber}`,
                     row: seat.seatRow,
                     price: seat.price,
                     status: seat.status ? 'available' : 'booked',
-                    seat_type: seat.seatType.seatTypeName === 'Thường' ? 'Standard' : 'VIP'
+                    seat_type: seat.seatType.seatTypeName === 'Thường' ? 'Thường' : 'VIP'
                 }));
 
                 setSeats(transformedSeats);
@@ -152,7 +152,7 @@ export default function BookingPage() {
                     <p className="text-red-600 text-lg">{error}</p>
                     <button
                         onClick={() => navigate('/')}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="mt-4 px-4 py-2 bg-[rgb(61,149,212)] text-white rounded hover:bg-sky-700"
                     >
                         Quay về trang chủ
                     </button>
@@ -287,7 +287,7 @@ export default function BookingPage() {
                                 disabled={selectedSeats.length === 0}
                                 className={`px-8 py-3 rounded-lg font-medium text-white transition-all duration-200 ${selectedSeats.length === 0
                                     ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                                    : 'bg-[rgb(61,149,212)] hover:bg-sky-700 shadow-lg hover:shadow-xl'
                                     }`}
                             >
                                 {selectedSeats.length === 0 ? 'Chọn ghế để tiếp tục' : 'Đặt Ghế'}
