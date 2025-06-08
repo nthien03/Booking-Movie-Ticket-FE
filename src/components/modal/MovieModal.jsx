@@ -7,9 +7,15 @@ import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 
-const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
+const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState([]);
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -174,7 +180,12 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
             }
             // Bắt đầu trạng thái loading khi submit
             setLoading(true);
-            const releaseDate = moment(values.releaseDate).toISOString();  // Đảm bảo ngày tháng theo định dạng ISO 8601
+            //const releaseDate = moment(values.releaseDate).toISOString();
+
+
+            let releaseDate = dayjs(values.releaseDate).tz("Asia/Ho_Chi_Minh").startOf('day');
+            const releaseDateISO = releaseDate.utc().toISOString();
+
             // Gửi dữ liệu lên backend bằng axios
             const response = await axios.post('http://localhost:8080/api/v1/movies', {
                 movieName: values.movieName,
@@ -185,7 +196,7 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                 trailerUrl: values.trailerUrl,
                 duration: values.duration,
                 genres: values.genres,
-                releaseDate: releaseDate,
+                releaseDate: releaseDateISO,
                 ageRestriction: values.ageRestriction,
             });
 
@@ -206,9 +217,10 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
             }
         } catch (error) {
             // Xử lý lỗi khi gửi request
+            console.error("Error submitting form:", error);
             notification.error({
                 message: "Lỗi",
-                description: error.message || "Đã có lỗi xảy ra khi gửi dữ liệu.",
+                description: "Đã có lỗi xảy ra khi gửi dữ liệu.",
             });
         } finally {
             // Kết thúc trạng thái loading
@@ -446,4 +458,4 @@ const CreateMovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
     )
 };
 
-export default CreateMovieModal;
+export default MovieModal;

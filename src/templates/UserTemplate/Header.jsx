@@ -38,7 +38,7 @@ export default () => {
                 },
                 {
                     key: 'booking',
-                    label: <NavLink to='/bookings/history'>Lịch sử đặt vé</NavLink>,
+                    label: <NavLink to='/booking/history'>Lịch sử đặt vé</NavLink>,
                     icon: <DesktopOutlined />,
                 },
             ]}

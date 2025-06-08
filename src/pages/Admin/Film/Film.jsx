@@ -5,9 +5,9 @@ import { useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { EditOutlined, CalendarOutlined, EyeOutlined } from '@ant-design/icons';
 import { FiPlus, FiUpload } from "react-icons/fi";
-import CreateMovieModal from '../../../components/modal/CreateMovieModal';
-import axios from 'axios';
+import MovieModal from '../../../components/modal/MovieModal';
 import { SearchOutlined } from '@ant-design/icons';
+import { callFetchMovies } from '../../../utils/api';
 
 
 const { Search } = Input;
@@ -15,66 +15,98 @@ const { Search } = Input;
 export default function Film() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { arrFilm } = useSelector(state => state.FilmReducer)
-    const [data, setData] = useState([])
     const [openCreateScheduleModal, setCreateScheduleModal] = useState(false)
-    const [openCreateMovieModal, setOpenCreateMovieModal] = useState(false)
+    const [openMovieModal, setOpenMovieModal] = useState(false)
     const [openViewMovieModal, setOpenViewMovieModal] = useState(false)
     const [openEditMovieModal, setOpenEditMovieModal] = useState(false)
-    // useEffect(() => {
-    //     dispatch(callApiFilm)
-    // }, [])
+    const [data, setData] = useState([]);
+    const [meta, setMeta] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(6);
+    const [loading, setLoading] = useState(false);
+    const [searchKeyword, setSearchKeyword] = useState('');
 
-    // useEffect(() => {
-    //     setData(arrFilm)
-    // }, [arrFilm])
-    const defaultRoomOptions = [
-        { label: "Phòng chiếu số 1", value: 1 },
-        { label: "Phòng chiếu số 2", value: 2 },
-        { label: "Phòng chiếu số 3", value: 3 },
-    ];
 
-    useEffect(() => {
-        // URL API để lấy danh sách phim
-        axios.get('http://localhost:8080/api/v1/movies') // Thay URL này với URL thực tế của bạn
-            .then(response => {
-                if (response.data) {
-                    setData(response.data); // Cập nhật dữ liệu vào state
-                } else {
-                    notification.error({
-                        message: 'Lỗi',
-                        description: 'Không thể lấy dữ liệu phim từ server.',
-                    });
-                }
-            })
-            .catch(error => {
+    const fetchMovies = async (page, size = pageSize, keyword = '') => {
+        setLoading(true);
+        try {
+            let filter = '';
+            if (keyword.trim() !== '') {
+                filter = `movieName ~ '${keyword}'`;
+            }
+
+            const response = await callFetchMovies(page, size, filter);
+
+            if (response.code === 1000) {
+                const { result, meta } = response.data;
+                setData(result);
+                setMeta(meta);
+            } else {
                 notification.error({
-                    message: 'Lỗi',
-                    description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
+                    description: response.message || 'Không thể lấy dữ liệu phim từ server.',
                 });
-                console.error('Error fetching data:', error);
+            }
+        } catch (error) {
+            notification.error({
+                description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
             });
-    }, []); // Chạy khi component mount lần đầu
+            console.error('Error fetching movies:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
     // useEffect(() => {
-    //     const mockData = [
-    //         {
-    //             id: 1, // thay vì maPhim
-    //             poster: 'https://chieuphimquocgia.com.vn/_next/image?url=http%3A%2F%2Fapiv2.chieuphimquocgia.com.vn%2FContent%2FImages%2F0018473_0.jpg&w=384&q=75', // thay vì hinhAnh
-    //             movieName: 'A MINECRAFT MOVIE-K - Phụ đề', // thay vì tenPhim
-    //             director: 'Anthony Russo, Joe Russo', // thay vì daoDien
-    //             duration: '181 phút', // thay vì thoiLuong
-    //             releaseDate: '2019-04-26', // thay vì ngayKhoiChieu
-    //         },
-    //     ];
-    //     setData(mockData);
+    //     // URL API để lấy danh sách phim
+    //     axios.get('http://localhost:8080/api/v1/movies') // Thay URL này với URL thực tế của bạn
+    //         .then(response => {
+    //             if (response.data) {
+    //                 setData(response.data); // Cập nhật dữ liệu vào state
+    //             } else {
+    //                 notification.error({
+    //                     message: 'Lỗi',
+    //                     description: 'Không thể lấy dữ liệu phim từ server.',
+    //                 });
+    //             }
+    //         })
+    //         .catch(error => {
+    //             notification.error({
+    //                 message: 'Lỗi',
+    //                 description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
+    //             });
+    //             console.error('Error fetching data:', error);
+    //         });
     // }, []);
 
-    const searchKeyword = (value) => {
-        setData(prevData => prevData.filter(item => {
-            if (value.trim() === '') return true;
-            return item.movieName.toLowerCase().includes(value.toLowerCase());
-        }));
-    }
+    useEffect(() => {
+        fetchMovies(currentPage, pageSize, searchKeyword);
+    }, [currentPage, searchKeyword]);
+
+    const handleSearch = (value) => {
+        setCurrentPage(1);
+        setSearchKeyword(value.trim());
+    };
+
+    const paginationConfig = {
+        current: currentPage,
+        pageSize: pageSize,
+        total: meta.total || 0,
+        showSizeChanger: false,
+        showQuickJumper: false,
+        // showTotal: (total, range) =>
+        //     `Hiển thị ${range[0]}-${range[1]} của ${total} phim`,
+        onChange: (page) => setCurrentPage(page),
+    };
+
+    // const searchKeyword = (value) => {
+    //     setData(prevData => prevData.filter(item => {
+    //         if (value.trim() === '') return true;
+    //         return item.movieName.toLowerCase().includes(value.toLowerCase());
+    //     }));
+    // }
+
     const columns = [
         {
             title: 'STT',
@@ -141,29 +173,6 @@ export default function Film() {
             dataIndex: 'hanhDong',
             render: (text, film) => {
                 return <>
-                    {/* <Tooltip placement="leftBottom" title={'Chỉnh sửa phim'}>
-                        <NavLink key={1} className='bg-dark text-blue-600 mr-3 text-2xl ' to={`/admin/film/edit/${film.maPhim}`}><EditOutlined /></NavLink>
-                    </Tooltip>
-                    <Tooltip placement="bottom" title={'Xóa phim'}>
-                        <button onClick={() => {
-                            Swal.fire({
-                                title: 'Bạn có muốn xóa phim này không ?',
-                                showDenyButton: true,
-                                confirmButtonText: 'Đồng ý',
-                                denyButtonText: 'Hủy',
-                                icon: 'question',
-                                iconColor: 'rgb(104 217 254)',
-                                confirmButtonColor: '#f97316'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    dispatch(callApiXoaPhim(film.maPhim))
-                                }
-                            })
-                        }} key={2} className='bg-dark text-red-600 text-2xl hover:text-red-400'><DeleteOutlined /></button>
-                    </Tooltip>
-                    <Tooltip placement="topRight" title={'Tạo lịch chiếu'}>
-                        <NavLink key={3} className='bg-dark text-orange-600 hover:text-orange-400 ml-3 text-2xl ' to={`/admin/film/showtime/${film.maPhim}/${film.tenPhim}`}><CalendarOutlined /></NavLink>
-                    </Tooltip> */}
                     {/* Xem phim */}
                     <Tooltip placement="leftBottom" title={'Xem chi tiết phim'}>
                         <button
@@ -212,7 +221,7 @@ export default function Film() {
             <h2 className='text-2xl uppercase font-bold'>Quản lý Phim</h2>
 
             <Button
-                onClick={() => setOpenCreateMovieModal(true)}
+                onClick={() => setOpenMovieModal(true)}
                 className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-2"
                 aria-label="Add New Movie"
             >
@@ -226,7 +235,7 @@ export default function Film() {
             placeholder="Tìm kiếm theo tên"
             enterButton={<SearchOutlined />}
             size="large"
-            onSearch={searchKeyword}
+            onSearch={handleSearch}
         />
         <div className="overflow-x-auto">
             {/* div con có min-width để ép table luôn rộng 768px */}
@@ -235,15 +244,17 @@ export default function Film() {
                     columns={columns}
                     dataSource={data}
                     rowKey="id"
+                    loading={loading}
+                    pagination={meta.total > pageSize ? paginationConfig : false}
                 // có thể thêm scroll nếu muốn
                 // scroll={{ x: 768 }}
                 />
             </div>
         </div>
 
-        <CreateMovieModal
-            isModalOpen={openCreateMovieModal}
-            setIsModalOpen={setOpenCreateMovieModal}
+        <MovieModal
+            isModalOpen={openMovieModal}
+            setIsModalOpen={setOpenMovieModal}
         />
 
         {/* <CreateScheduleModal

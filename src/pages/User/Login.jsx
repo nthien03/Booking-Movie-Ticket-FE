@@ -37,6 +37,7 @@ export default function Login() {
     const urlParams = new URLSearchParams(window.location.search);
     const callback = urlParams.get('callback');
 
+
     // Kiểm tra nếu đã đăng nhập thì chuyển hướng
     useEffect(() => {
         if (isAuthenticated) {
@@ -136,9 +137,9 @@ export default function Login() {
     };
 
     // Nếu đã xác thực thì chuyển hướng ngay lập tức
-    if (isAuthenticated) {
-        return <Navigate to={callback || '/'} replace />;
-    }
+    // if (isAuthenticated) {
+    //     return <Navigate to={callback || '/'} replace />;
+    // }
 
     return (
         <div className="login">

@@ -62,43 +62,39 @@ export default function MovieList() {
     }, [location])
 
     // Hàm tìm kiếm phim đang chiếu khi người dùng submit form
-    const handleSearch = async (e) => {
-        e.preventDefault()
-        const searchKeyword = keyword.trim()
+    // const handleSearch = async (e) => {
+    //     e.preventDefault()
+    //     const searchKeyword = keyword.trim()
 
-        if (searchKeyword) {
-            try {
-                // Chỉ tìm kiếm trong danh sách phim đang chiếu
-                const url = `http://localhost:8080/api/v1/movies/now-showing?keyword=${encodeURIComponent(searchKeyword)}`
-                const res = await fetch(url)
+    //     if (searchKeyword) {
+    //         try {
+    //             // Chỉ tìm kiếm trong danh sách phim đang chiếu
+    //             const url = `http://localhost:8080/api/v1/movies/now-showing?keyword=${encodeURIComponent(searchKeyword)}`
+    //             const res = await fetch(url)
 
-                if (!res.ok) throw new Error('Lỗi khi tìm kiếm phim')
+    //             if (!res.ok) throw new Error('Lỗi khi tìm kiếm phim')
 
-                const json = await res.json()
+    //             const json = await res.json()
 
-                // Nếu đang ở tab phim đang chiếu, hiển thị kết quả tìm kiếm
-                if (activeTab === '1') {
-                    setFilteredFilms(json.data || [])
-                }
-            } catch (error) {
-                console.error(error)
-                if (activeTab === '1') {
-                    setFilteredFilms([])
-                }
-            }
-        } else {
-            // Nếu không có từ khóa, hiển thị lại tất cả phim của tab hiện tại
-            setFilteredFilms(activeTab === '1' ? arrFilmDangChieu : arrFilmSapChieu)
-        }
-    }
+    //             // Nếu đang ở tab phim đang chiếu, hiển thị kết quả tìm kiếm
+    //             if (activeTab === '1') {
+    //                 setFilteredFilms(json.data || [])
+    //             }
+    //         } catch (error) {
+    //             console.error(error)
+    //             if (activeTab === '1') {
+    //                 setFilteredFilms([])
+    //             }
+    //         }
+    //     } else {
+    //         // Nếu không có từ khóa, hiển thị lại tất cả phim của tab hiện tại
+    //         setFilteredFilms(activeTab === '1' ? arrFilmDangChieu : arrFilmSapChieu)
+    //     }
+    // }
 
     // Xử lý khi chuyển tab
     const handleTabChange = (key) => {
         setActiveTab(key)
-        // Reset từ khóa tìm kiếm chỉ khi chuyển từ tab phim đang chiếu sang tab khác
-        if (key !== '1') {
-            setKeyword('')
-        }
         setFilteredFilms(key === '1' ? arrFilmDangChieu : arrFilmSapChieu)
     }
 
@@ -179,7 +175,7 @@ export default function MovieList() {
                             >
                                 <div
                                     className="cursor-pointer h-48 sm:h-60"
-                                    onClick={() => navigate(`detail/${itemFilm.id}`)}
+                                    onClick={() => navigate(`movies/${itemFilm.id}`)}
                                     style={{ aspectRatio: '3/4' }}
                                 >
                                     <img
@@ -206,12 +202,12 @@ export default function MovieList() {
                                             <span>{formattedDate}</span>
                                         </div>
                                     </div>
-                                    <button
+                                    {/* <button
                                         onClick={() => navigate(`detail/${itemFilm.id}`)}
                                         className="flex items-center justify-center w-full p-2 font-semibold rounded-md bg-yellow-500 text-white mt-auto"
                                     >
                                         Đặt vé
-                                    </button>
+                                    </button> */}
                                 </div>
                             </div>
                         )

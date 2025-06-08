@@ -1,12 +1,9 @@
-import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom'
-import { history } from './utils/history'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AdminTemplate from './templates/AdminTemplate/AdminTemplate'
 import Login from './pages/User/Login';
 import Register from './pages/User/Register';
 import UserTemplate from './templates/UserTemplate/UserTemplate';
 import Home from './pages/User/Home';
-import InforUser from './pages/User/InforUser';
-import Detail from './pages/User/Detail';
 import NotFound from './pages/NotFound';
 import Dashboard from './pages/Admin/Dashboard';
 import Film from './pages/Admin/Film/Film';
@@ -17,57 +14,137 @@ import ScheduleManagement from './pages/Admin/Schedule/ScheduleManagement';
 import MovieDetail from './pages/User/MovieDetail';
 import RoomManagement from './pages/Admin/Room/RoomManagement';
 import GenreManagement from './pages/Admin/Genre/GenreManagement';
-import { fetchAccount } from './redux/reducers/accountReducer';
+import { fetchAccount, setRefreshTokenAction } from './redux/reducers/accountReducer';
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import BookingPage from './pages/User/BookingPage';
 import BookingManagement from './pages/Admin/Booking/BookingManagement';
 import BookingHistory from './pages/User/BookingHistory';
 import UserInfo from './pages/User/UserInfo';
+import { message } from 'antd';
+import PaymentResultPage from './pages/User/PaymentResultPage';
+
+// Router configuration
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <UserTemplate />,
+        errorElement: <NotFound />,
+        children: [
+            {
+                index: true,
+                element: <Home />
+            },
+            {
+                path: 'movies/:id',
+                element: <MovieDetail />
+            },
+            {
+                path: 'info',
+                element: <UserInfo />
+            },
+            {
+                path: 'login',
+                element: <Login />
+            },
+            {
+                path: 'register',
+                element: <Register />
+            },
+            {
+                path: 'booking',
+                element: <BookingPage />
+            },
+            {
+                path: '/payment/result',
+                element: <PaymentResultPage />
+            },
+            {
+                path: 'booking/history',
+                element: <BookingHistory />
+            },
+            {
+                path: 'notfound',
+                element: <NotFound />
+            }
+        ]
+    },
+    {
+        path: '/admin',
+        element: <AdminTemplate />,
+        errorElement: <NotFound />,
+        children: [
+            {
+                index: true,
+                element: <Dashboard />
+            },
+            {
+                path: 'user',
+                element: <Users />
+            },
+            {
+                path: 'user/addnewuser',
+                element: <AddNewUser />
+            },
+            {
+                path: 'user/edit/:taiKhoan',
+                element: <EditUser />
+            },
+            {
+                path: 'movie',
+                element: <Film />
+            },
+            {
+                path: 'room',
+                element: <RoomManagement />
+            },
+            {
+                path: 'genres',
+                element: <GenreManagement />
+            },
+            {
+                path: 'schedule',
+                element: <ScheduleManagement />
+            },
+            {
+                path: 'bookings',
+                element: <BookingManagement />
+            }
+        ]
+    },
+    {
+        path: '*',
+        element: <NotFound />
+    }
+]);
+
 function App() {
-
     const dispatch = useDispatch();
+    const isRefreshToken = useSelector(state => state.account.isRefreshToken);
+    const errorRefreshToken = useSelector(state => state.account.errorRefreshToken);
 
+    // Handle refresh token error
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            dispatch(fetchAccount());
+        if (isRefreshToken === true) {
+            localStorage.removeItem('access_token');
+            message.error(errorRefreshToken);
+            dispatch(setRefreshTokenAction({ status: false, message: "" }));
+            window.location.href = '/login';
         }
+    }, [isRefreshToken, errorRefreshToken, dispatch]);
+
+    // Fetch account info on app load (except for login/register pages)
+    useEffect(() => {
+        const excludedPaths = ['/login', '/register'];
+
+        if (excludedPaths.includes(window.location.pathname)) {
+            return;
+        }
+
+        dispatch(fetchAccount());
     }, [dispatch]);
 
-    return (
-        <HistoryRouter history={history}>
-            <Routes>
-                <Route path='/' element={<UserTemplate />}>
-                    <Route index path='/' element={<Home />} />
-                    <Route path='*' element={<NotFound />} />
-                    <Route path='notfound' element={<NotFound />} />
-                    <Route path='detail/:id' element={<Detail />} />
-                    <Route path='movies/:id' element={<MovieDetail />} />
-                    <Route path='info' element={<UserInfo />} />
-                    <Route path='login' element={<Login />} />
-                    <Route path='register' element={<Register />} />
-                    <Route path='booking' element={<BookingPage />} />
-                    <Route path='bookings/history' element={<BookingHistory />} />
-                </Route>
-                <Route path='/admin' element={<AdminTemplate />}>
-                    {/* <Route path='/admin' index element={<Dashboard />} /> */}
-                    <Route index element={<Dashboard />} />
-                    <Route path='user' element={<Users />} />
-                    <Route path='user/addnewuser' element={<AddNewUser />} />
-
-                    <Route path='user/edit/:taiKhoan' element={<EditUser />} />
-
-                    <Route path='movie' element={<Film />} />
-                    <Route path='room' element={<RoomManagement />} />
-                    <Route path='genres' element={<GenreManagement />} />
-
-                    <Route path='schedule' element={<ScheduleManagement />} />
-                    <Route path='bookings' element={<BookingManagement />} />
-
-                </Route>
-            </Routes>
-        </HistoryRouter>
-    );
+    return <RouterProvider router={router} />;
 }
+
 export default App;
