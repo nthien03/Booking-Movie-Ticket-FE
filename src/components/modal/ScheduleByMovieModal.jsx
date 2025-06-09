@@ -66,7 +66,7 @@ export default function ScheduleByMovieModal({ schedules, onClose, movieData }) 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
-            <div className="bg-white rounded-xl p-6 max-w-3xl w-full relative shadow-lg">
+            <div className="bg-white rounded-lg p-6 max-w-3xl w-full relative shadow-lg">
                 <button
                     onClick={onClose}
                     className="absolute top-2 right-2 text-gray-800 text-2xl font-bold"
@@ -105,7 +105,7 @@ export default function ScheduleByMovieModal({ schedules, onClose, movieData }) 
                                     <button
                                         key={sch.id}
                                         onClick={() => handleScheduleSelect(sch)}
-                                        className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-[rgb(61,149,212)] hover:text-white transition"
+                                        className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-[rgb(61,149,212)] hover:text-white transition"
                                     >
                                         {dayjs(sch.startTime).format('HH:mm')}
                                     </button>

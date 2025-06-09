@@ -57,15 +57,18 @@ export default function MovieDetail() {
             }}
         >
             {/* overlay mờ */}
-            <div className="bg-black bg-opacity-70 w-full h-full px-6 py-24">
-                <div className="max-w-6xl mx-auto">
+            <div className="bg-black bg-opacity-70 w-full min-h-screen px-6 py-24">
+                <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row gap-8">
-                        <div className="w-full md:w-1/3">
-                            <img
-                                src={`http://localhost:8080/storage/poster/${movie.poster}`}
-                                alt={movie.movieName}
-                                className="rounded-xl w-full object-cover"
-                            />
+                        <div className="w-full md:w-1/4">
+                            <div className="w-full aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
+                                <img
+                                    src={`http://localhost:8080/storage/poster/${movie.poster}`}
+                                    alt={movie.movieName}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
                         </div>
 
                         <div className="flex-1 space-y-4">
@@ -100,7 +103,7 @@ export default function MovieDetail() {
                             <div className="flex gap-4 mt-4">
                                 <button
                                     onClick={() => setShowTrailer(true)}
-                                    className="mt-8 text-sm border border-yellow-600 text-yellow-600 px-4 py-2 rounded-full font-semibold transition-transform duration-200 hover:scale-110"
+                                    className="mt-8 text-sm border border-yellow-600 text-yellow-600 px-4 py-2 rounded-lg font-semibold transition-transform duration-200 hover:scale-110"
                                 >
                                     Xem trailer
                                 </button>
@@ -111,7 +114,7 @@ export default function MovieDetail() {
                                         color: 'rgb(61, 149, 212)',
                                         border: '1px solid rgb(61, 149, 212)',
                                     }}
-                                    className="mt-8 text-sm px-4 py-2 rounded-full font-semibold transition-transform duration-200 hover:scale-110"
+                                    className="mt-8 text-sm px-4 py-2 rounded-lg font-semibold transition-transform duration-200 hover:scale-110"
                                 >
                                     Đặt vé
                                 </button>
@@ -123,7 +126,7 @@ export default function MovieDetail() {
 
             {showTrailer && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
-                    <div className="bg-black rounded-xl overflow-hidden max-w-3xl w-full relative">
+                    <div className="bg-black rounded-lg overflow-hidden max-w-3xl w-full relative">
                         <button
                             onClick={closeTrailerModal}
                             className="absolute top-2 right-2 text-white text-2xl font-bold"

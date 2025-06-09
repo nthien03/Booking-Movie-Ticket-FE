@@ -5,39 +5,83 @@ import axios from 'axios';
 import { FiPlus } from "react-icons/fi";
 import CreateScheduleModal from '../../../components/modal/ScheduleModal';
 import { SearchOutlined } from '@ant-design/icons';
-const { Search } = Input;
+import { callFetchSchedules } from '../../../utils/api';
 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const { Search } = Input;
 export default function ScheduleManagement() {
     const [data, setData] = useState([]);                    // Danh sách lịch chiếu
     const [openModal, setOpenModal] = useState(false);       // Trạng thái mở modal
     const [editingSchedule, setEditingSchedule] = useState();// Lịch đang sửa (nếu có)
     const [keyword, setKeyword] = useState('');
     const [filterDate, setFilterDate] = useState(null);
+    const [meta, setMeta] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(6);
+    const [loading, setLoading] = useState(false);
+
+
     // Fetch dữ liệu lịch chiếu
-    const fetchSchedules = () => {
-        axios.get('http://localhost:8080/api/v1/schedules')
-            .then(response => {
-                if (response.data) {
-                    setData(response.data);
-                } else {
-                    notification.error({
-                        message: 'Lỗi',
-                        description: 'Không thể lấy dữ liệu lịch chiếu từ server.',
-                    });
-                }
-            })
-            .catch(error => {
+    // const fetchSchedules = () => {
+    //     axios.get('http://localhost:8080/api/v1/schedules')
+    //         .then(response => {
+    //             if (response.data) {
+    //                 setData(response.data);
+    //             } else {
+    //                 notification.error({
+    //                     message: 'Lỗi',
+    //                     description: 'Không thể lấy dữ liệu lịch chiếu từ server.',
+    //                 });
+    //             }
+    //         })
+    //         .catch(error => {
+    //             notification.error({
+    //                 message: 'Lỗi',
+    //                 description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
+    //             });
+    //             console.error('Error fetching schedules:', error);
+    //         });
+    // };
+    const fetchSchedules = async (page, size = pageSize, movieName = '', date = null) => {
+        setLoading(true);
+        try {
+
+            const cleanMovieName = movieName && movieName.trim() ? movieName.trim() : undefined;
+            const cleanDate = date || undefined;
+
+            const res = await callFetchSchedules(page, size, cleanMovieName, cleanDate);
+
+            if (res.code === 1000) {
+                const { result, meta } = res.data;
+                setData(result);
+                setMeta(meta);
+            } else {
                 notification.error({
-                    message: 'Lỗi',
-                    description: 'Đã có lỗi xảy ra khi lấy dữ liệu.',
+                    message: "Lỗi",
+                    description: res.message || "Không thể lấy dữ liệu lịch chiếu.",
                 });
-                console.error('Error fetching schedules:', error);
+            }
+        } catch (err) {
+            notification.error({
+                message: "Lỗi",
+                description: "Đã có lỗi xảy ra khi lấy dữ liệu. Vui lòng thử lại sau.",
             });
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
+
     useEffect(() => {
-        fetchSchedules();
-    }, []);
+        fetchSchedules(currentPage, pageSize, keyword, filterDate);
+    }, [currentPage, keyword, filterDate]);
 
     // Mở modal tạo mới
     const handleCreate = () => {
@@ -58,46 +102,34 @@ export default function ScheduleManagement() {
         if (shouldReload) fetchSchedules(); // reload nếu có tạo/sửa thành công
     };
 
+    const paginationConfig = {
+        current: currentPage,
+        pageSize: pageSize,
+        total: meta.total || 0,
+        showSizeChanger: false,
+        showQuickJumper: false,
+        // showTotal: (total, range) =>
+        //     `Hiển thị ${range[0]}-${range[1]} của ${total} lịch chiếu`,
+        onChange: (page) => setCurrentPage(page),
+    };
+
     // Tìm kiếm theo tên phim
-    const searchKeyword = (value) => {
-        if (!value.trim()) {
-            fetchSchedules();
+    const handleSearch = (value) => {
+        setCurrentPage(1);             // reset về page đầu
+        setKeyword(value ? value.trim() : '');     // gán vào state keyword
+    };
+
+    const handleDateChange = (date) => {
+        setCurrentPage(1);
+        if (date) {
+            // Chỉ convert khi date có giá trị
+            const fDate = dayjs(date).tz("Asia/Ho_Chi_Minh").startOf('day').utc().toISOString();
+            setFilterDate(fDate);
         } else {
-            setData(prevData => prevData.filter(item =>
-                item.movie.movieName.toLowerCase().includes(value.toLowerCase())
-            ));
+            // Khi clear date, set về null
+            setFilterDate(null);
         }
     };
-
-    const handleFilter = () => {
-        axios.get('http://localhost:8080/api/v1/schedules')
-            .then(res => {
-                let filtered = res.data;
-
-                if (keyword.trim()) {
-                    filtered = filtered.filter(item =>
-                        item.movie.movieName.toLowerCase().includes(keyword.toLowerCase())
-                    );
-                }
-
-                if (filterDate) {
-                    const dateString = filterDate.format('YYYY-MM-DD');
-                    filtered = filtered.filter(item =>
-                        item.date.startsWith(dateString)
-                    );
-                }
-
-                setData(filtered);
-            })
-            .catch(err => {
-                notification.error({
-                    message: 'Lỗi',
-                    description: 'Lọc dữ liệu thất bại.'
-                });
-                console.error(err);
-            });
-    };
-
 
     // Cấu hình cột bảng
     const columns = [
@@ -200,7 +232,7 @@ export default function ScheduleManagement() {
                         size="large"
                         value={keyword}
                         onChange={e => setKeyword(e.target.value)}
-                        onSearch={handleFilter}
+                        onSearch={handleSearch}
                         className="flex-grow mr-6"
                     />
                 </div>
@@ -209,10 +241,10 @@ export default function ScheduleManagement() {
                         placeholder="Lọc theo ngày chiếu"
                         format="DD/MM/YYYY"
                         size="large"
-                        onChange={date => setFilterDate(date)}
+                        onChange={handleDateChange}
                         allowClear
                     />
-                    <Button size="large" type="primary" onClick={handleFilter}>
+                    <Button size="large" type="primary" onClick={() => setCurrentPage(1)}>
                         Lọc
                     </Button>
                 </div>
@@ -225,6 +257,8 @@ export default function ScheduleManagement() {
                         columns={columns}
                         dataSource={data}
                         rowKey="id"
+                        loading={loading}
+                        pagination={meta.total > pageSize ? paginationConfig : false}
                     />
                 </div>
             </div>
@@ -234,7 +268,7 @@ export default function ScheduleManagement() {
                 isModalOpen={openModal}
                 setIsModalOpen={handleModalClose}
                 dataInit={editingSchedule}
-                onSuccess={() => handleModalClose(true)}
+                onSuccess={() => { fetchSchedules(currentPage, pageSize, keyword, filterDate); }}
             />
         </div>
     );

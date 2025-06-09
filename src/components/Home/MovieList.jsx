@@ -24,7 +24,7 @@ export default function MovieList() {
             try {
                 setIsLoading(true)
                 const fetchDangChieu = axios.get('http://localhost:8080/api/v1/movies/now-showing')
-                const fetchSapChieu = axios.get('http://localhost:8080/api/v1/movies/now-showing') // Đã sửa API endpoint cho đúng
+                const fetchSapChieu = axios.get('http://localhost:8080/api/v1/movies/coming-soon') // Đã sửa API endpoint cho đúng
 
                 const [resDangChieu, resSapChieu] = await Promise.all([fetchDangChieu, fetchSapChieu])
 

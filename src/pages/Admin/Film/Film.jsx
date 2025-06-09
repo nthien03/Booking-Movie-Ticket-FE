@@ -255,6 +255,7 @@ export default function Film() {
         <MovieModal
             isModalOpen={openMovieModal}
             setIsModalOpen={setOpenMovieModal}
+            onSuccess={() => fetchMovies(currentPage, pageSize, searchKeyword)}
         />
 
         {/* <CreateScheduleModal

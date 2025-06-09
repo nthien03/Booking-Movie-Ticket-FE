@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, DatePicker, InputNumber, Upload, notification, Spin, message } from "antd";
+import { Modal, Form, Input, Select, DatePicker, InputNumber, Upload, notification, Spin, message, Switch } from "antd";
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
-import axios from 'axios';
 import { callUploadSingleFile } from '../../services/FilmService';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
@@ -10,12 +9,13 @@ import "react-quill/dist/quill.snow.css";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { callCreateMovie, callFetchActors, callFetchGenres } from '../../utils/api';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 
-const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
+const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit, onSuccess }) => {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState([]);
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -41,41 +41,48 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
         const fetchDropdowns = async () => {
             try {
                 const [actorRes, genreRes] = await Promise.all([
-                    axios.get(`http://localhost:8080/api/v1/actors?size=1000`),
-                    axios.get(`http://localhost:8080/api/v1/genres?size=1000`),
+                    callFetchActors(1000),
+                    callFetchGenres(1000),
                 ]);
                 setActorOptions(
-                    actorRes.data.data.result.map((a) => ({ value: a.id, label: a.fullName }))
+                    actorRes.data.result.map((a) => ({ value: a.id, label: a.fullName }))
                 );
                 setGenreOptions(
-                    genreRes.data.data.result.map((g) => ({ value: g.id, label: g.name }))
+                    genreRes.data.result.map((g) => ({ value: g.id, label: g.name }))
                 );
             } catch (e) {
+                console.error("Error fetching actors/genres:", e);
                 message.error("Không lấy được danh sách diễn viên / thể loại");
             }
         };
         fetchDropdowns();
+        form.setFieldsValue({ status: true });
     }, [isModalOpen]);
 
 
     useEffect(() => {
-        if (dataInit?.id && dataInit?.description) {
-            form.setFieldsValue({
-                movieName: dataInit.movieName,
-                director: dataInit.director,
-                actors: dataInit.actors,
-                description: dataInit.description,
-                poster: dataInit.poster,
-                trailerUrl: dataInit.trailerUrl,
-                duration: dataInit.duration,
-                genres: dataInit.genres,
-                releaseDate: moment(dataInit.releaseDate), // Đảm bảo date được định dạng đúng
-                ageRestriction: dataInit.ageRestriction,
-            });
-            setDataLogo([{
-                name: dataInit.poster,
-                uid: uuidv4(),
-            }]);
+        if (isModalOpen) {
+            if (dataInit) {
+                form.setFieldsValue({
+                    movieName: dataInit.movieName,
+                    director: dataInit.director,
+                    actors: dataInit.actors,
+                    description: dataInit.description,
+                    poster: dataInit.poster,
+                    trailerUrl: dataInit.trailerUrl,
+                    duration: dataInit.duration,
+                    genres: dataInit.genres,
+                    releaseDate: moment(dataInit.releaseDate), // Đảm bảo date được định dạng đúng
+                    ageRestriction: dataInit.ageRestriction,
+                });
+                setDataLogo([{
+                    name: dataInit.poster,
+                    uid: uuidv4(),
+                }]);
+            } else {
+                form.resetFields();
+                form.setFieldsValue({ status: true });
+            }
         }
     }, [dataInit]);
 
@@ -183,11 +190,10 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
             //const releaseDate = moment(values.releaseDate).toISOString();
 
 
-            let releaseDate = dayjs(values.releaseDate).tz("Asia/Ho_Chi_Minh").startOf('day');
-            const releaseDateISO = releaseDate.utc().toISOString();
+            const releaseDate = dayjs(values.releaseDate).tz("Asia/Ho_Chi_Minh").startOf('day').utc().toISOString();
 
             // Gửi dữ liệu lên backend bằng axios
-            const response = await axios.post('http://localhost:8080/api/v1/movies', {
+            const movieData = {
                 movieName: values.movieName,
                 director: values.director,
                 actors: values.actors,
@@ -196,32 +202,47 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                 trailerUrl: values.trailerUrl,
                 duration: values.duration,
                 genres: values.genres,
-                releaseDate: releaseDateISO,
+                releaseDate: releaseDate,
                 ageRestriction: values.ageRestriction,
-            });
+                status: values.status
+            };
+
+            const response = await callCreateMovie(movieData);
+            console.log("Response from server:", response);
+            // Kiểm tra response từ server
 
             // Kiểm tra response từ server
-            if (response.data.code === 1000) {
+            if (response.code === 1000) {
                 notification.success({
                     message: "Thành công",
                     description: "Phim đã được tạo thành công!",
                 });
                 form.resetFields(); // Reset form
                 setIsModalOpen(false); // Đóng modal
-                window.location.reload(); // Reload trang
+                if (onSuccess) {
+                    onSuccess();
+                }
             } else {
+                console.error("Error creating movie:", response.message);
                 notification.error({
-                    message: "Lỗi",
-                    description: "Đã có lỗi xảy ra khi tạo phim. Vui lòng thử lại.",
+                    description: response.message || "Đã có lỗi xảy ra khi tạo phim. Vui lòng thử lại.",
                 });
             }
         } catch (error) {
             // Xử lý lỗi khi gửi request
+            if (error.response && error.response.data) {
+                const res = error.response.data;
+                notification.error({
+                    message: "Lỗi",
+                    description: res.message || "Đã có lỗi xảy ra khi gửi dữ liệu.",
+                });
+            } else {
+                notification.error({
+                    message: "Lỗi kết nối",
+                    description: "Đã có lỗi xảy ra khi gửi dữ liệu.",
+                });
+            }
             console.error("Error submitting form:", error);
-            notification.error({
-                message: "Lỗi",
-                description: "Đã có lỗi xảy ra khi gửi dữ liệu.",
-            });
         } finally {
             // Kết thúc trạng thái loading
             setLoading(false);
@@ -351,7 +372,7 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                         <Form.Item
                             name="duration"
                             label="Thời lượng (phút)"
-                            rules={[{ required: true, message: "Vui lòng chọn ngày khởi chiếu" }]}
+                            rules={[{ required: true, message: "Vui lòng nhập thời lượng phim" }]}
                         >
                             <InputNumber min={1} className="w-full" />
                         </Form.Item>
@@ -359,7 +380,7 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                         <Form.Item
                             name="ageRestriction"
                             label="Giới hạn độ tuổi"
-                            rules={[{ required: true, message: "Vui lòng chọn ngày khởi chiếu" }]}
+                            rules={[{ required: true, message: "Vui lòng chọn độ tuổi giới hạn" }]}
                         >
                             <Select options={ageRestrictions} />
                         </Form.Item>
@@ -424,6 +445,16 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                                 <div style={{ marginTop: 8 }}>Upload</div>
                             </div>
                         </Upload>
+
+                    </Form.Item>
+
+
+                    <Form.Item
+                        name="status"
+                        label="Trạng thái"
+                        valuePropName="checked"
+                        className="mt-4">
+                        <Switch checkedChildren="Mở" unCheckedChildren="Tắt" />
                     </Form.Item>
 
                     <div className="flex justify-end gap-4 mt-6">
@@ -431,8 +462,8 @@ const MovieModal = ({ isModalOpen, setIsModalOpen, dataInit }) => {
                             type="button"
                             onClick={() => {
                                 Modal.confirm({
-                                    title: "Discard Changes?",
-                                    content: "Are you sure you want to discard your changes?",
+                                    title: "Xác nhận hủy?",
+                                    content: "Bạn có chắc chắn hủy thao tác không?",
                                     onOk: () => {
                                         form.resetFields();
                                         setIsModalOpen(false);

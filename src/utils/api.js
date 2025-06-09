@@ -36,26 +36,37 @@ export const callFetchMovieDetail = (movieId) => {
     return axios.get(`/api/v1/movies/${movieId}`);
 };
 
-export const callCreateMovie = (movieName, director, actors, description, poster, trailerUrl, duration, genres, releaseDate, ageRestriction, status) => {
-    return axios.post('/api/v1/movies', {
-        movieName, director, actors, description, poster, trailerUrl, duration, genres, releaseDate, ageRestriction, status
+export const callCreateMovie = (movieData) => axios.post('/api/v1/movies', movieData);
+export const callUpdateMovie = (movieId, movieData) => axios.put(`/api/v1/movies/${movieId}`, movieData);
+
+export const callFetchActors = (size) => {
+    return axios.get('/api/v1/actors', { params: { size } });
+}
+
+export const callFetchGenres = (size) => {
+    return axios.get('/api/v1/genres', { params: { size } });
+}
+
+export const callUploadSingleFile = (file, folderType) => {
+    const bodyFormData = new FormData();
+    bodyFormData.append('file', file);
+    bodyFormData.append('folder', folderType);
+
+    return axios({
+        method: 'post',
+        url: '/api/v1/files',
+        data: bodyFormData,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
     });
 };
 
-export const callUpdateMovie = (movieId, movieName, director, actors, description, poster, trailerUrl, duration, genres, releaseDate, ageRestriction, status) => {
-    return axios.put(`/api/v1/movies/${movieId}`, {
-        movieName, director, actors, description, poster, trailerUrl, duration, genres, releaseDate, ageRestriction, status
+export const callFetchSchedules = (page, size, movieName, date) => {
+    return axios.get(`/api/v1/schedules`, {
+        params: { page, size, movieName, date }
     });
-
 };
-
-export const callFetchActors = () => {
-    return axios.get('/api/v1/actors');
-}
-
-export const callFetchGenres = () => {
-    return axios.get('/api/v1/genres');
-}
 
 /**
  * Module Booking
@@ -75,5 +86,9 @@ export const callCreateTicket = (price, ticketCode, status, scheduleId, seatId, 
 
 export const callVnpay = (amount, orderId) => {
     return axios.get(`/api/v1/payments/vn-pay`, { params: { amount, orderId } });
+};
+
+export const callFetchBookingHistory = (page, size, movieName) => {
+    return axios.get(`/api/v1/bookings/history`, { params: { page, size, movieName } });
 };
 

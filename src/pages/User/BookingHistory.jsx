@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Table, Button, notification, Empty, Spin, Input } from 'antd';
+import { Table, Button, notification, Empty, Spin, Input, Tag } from 'antd';
 import { CalendarOutlined, FileTextOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import axios from '../../utils/axios-customize';
+import { callFetchBookingHistory } from '../../utils/api';
+import BookingDetailModal from '../../components/modal/BookingDetailModal';
 
 const { Search } = Input;
 const BookingHistory = () => {
@@ -10,14 +12,47 @@ const BookingHistory = () => {
     const [meta, setMeta] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [selectedBookingId, setSelectedBookingId] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const handleViewDetails = (bookingId) => {
+        setSelectedBookingId(bookingId);
+        setIsModalVisible(true);
+    };
+
 
     // Lấy thông tin user từ Redux
     const user = useSelector(state => state.account.user);
     const userId = user?.id;
-    const [pageSize] = useState(10);
+    const [pageSize] = useState(6);
+
+    const mapBookingStatus = (code) => {
+        switch (code) {
+            case 0: return 'Nháp';
+            case 1: return 'Đã đặt';
+            case 2: return 'Hoàn thành';
+            case 3: return 'Đã hủy';
+            case 4: return 'Đang thanh toán';
+            case 5: return 'Thanh toán thất bại';
+            default: return 'Không xác định';
+        }
+    };
+
+    const getStatusColor = (code) => {
+        switch (code) {
+            case 0: return 'default';
+            case 1: return 'processing';
+            case 2: return 'success';
+            case 3: return 'error';
+            case 4: return 'warning';
+            case 5: return 'magenta';
+            default: return 'default';
+        }
+    };
 
     // API call thực tế - Backend pagination
-    const fetchBookings = async (page, size = pageSize) => {
+    const fetchBookings = async (page, size = pageSize, keyword = '') => {
         if (!userId) {
             console.error('User ID not found');
             return;
@@ -25,11 +60,7 @@ const BookingHistory = () => {
 
         setLoading(true);
         try {
-            const response = await axios.get(
-                `http://localhost:8080/api/v1/bookings/history?page=${page}&size=${size}`
-            );
-
-
+            const response = await callFetchBookingHistory(page, size, keyword);
             if (response.code === 1000) {
                 const { result, meta } = response.data || {};
                 setBookings(result || []);
@@ -58,9 +89,9 @@ const BookingHistory = () => {
 
     useEffect(() => {
         if (userId) {
-            fetchBookings(currentPage, pageSize);
+            fetchBookings(currentPage, pageSize, searchKeyword);
         }
-    }, [currentPage, userId]);
+    }, [currentPage, userId, searchKeyword]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -86,20 +117,6 @@ const BookingHistory = () => {
         ).format(price);
     };
 
-
-    const handleViewDetails = (booking) => {
-        notification.info({
-            message: `Chi tiết đơn hàng ${booking.bookingCode}`,
-            description: (
-                <div>
-                    <p><strong>Tên phim:</strong> {booking.movieName}</p>
-                    <p><strong>Ngày đặt:</strong> {formatDate(booking.bookingDate)}</p>
-                    <p><strong>Tổng tiền:</strong> {formatPrice(booking.totalPrice)}</p>
-                </div>
-            ),
-            duration: 8,
-        });
-    };
 
     const handleTableChange = (pagination) => {
         setCurrentPage(pagination.current);
@@ -146,6 +163,14 @@ const BookingHistory = () => {
             ),
         },
         {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            key: 'status',
+            width: 160,
+            render: (s) => <Tag color={getStatusColor(s)}>{mapBookingStatus(s)}</Tag>,
+        },
+
+        {
             title: 'Thao tác',
             key: 'action',
             width: 120,
@@ -153,7 +178,7 @@ const BookingHistory = () => {
             render: (_, record) => (
                 <Button
                     className="bg-[#3d95d4] text-white border-none hover:opacity-90"
-                    onClick={() => handleViewDetails(record)}
+                    onClick={() => handleViewDetails(record.id)}
                     size="small"
                 >
                     Chi tiết
@@ -204,11 +229,16 @@ const BookingHistory = () => {
                         <Input
                             className="w-64 h-10 px-3 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 mr-8"
                             placeholder="Tìm đơn đặt theo tên phim"
-                            //value={search}
-                            //onChange={(e) => setSearch(e.target.value)}
-                            //onPressEnter={handleSearch}
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            onPressEnter={() => {
+                                setCurrentPage(1);
+                                fetchBookings(1, pageSize, searchKeyword.trim());
+                            }}
                             suffix={<SearchOutlined className="text-gray-500 text-lg"
-                            // onClick={handleSearch}
+                                onClick={() => {
+                                    setCurrentPage(1);
+                                }}
                             />}
                         />
                     </div>
@@ -238,6 +268,16 @@ const BookingHistory = () => {
                         className="ant-table-custom"
                         scroll={{ x: 800 }}
                     />
+
+                    <BookingDetailModal
+                        bookingId={selectedBookingId}
+                        open={isModalVisible}
+                        onClose={() => {
+                            setIsModalVisible(false);
+                            setSelectedBookingId(null);
+                        }}
+                    />
+
                 </div>
             </div>
         </div>

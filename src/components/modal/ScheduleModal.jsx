@@ -12,8 +12,9 @@ import {
 } from "antd";
 import axios from "axios";
 import moment from "moment";
+import { callFetchMovies } from "../../utils/api";
 
-const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess }) => {
+const ScheduleModal = ({ isModalOpen, setIsModalOpen, onSuccess }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [movies, setMovies] = useState([]);
@@ -25,9 +26,9 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
         const fetchData = async () => {
             try {
                 const [moviesRes] = await Promise.all([
-                    axios.get("http://localhost:8080/api/v1/movies"),
+                    callFetchMovies(1, 1000)
                 ]);
-                setMovies(moviesRes.data);
+                setMovies(moviesRes.data.result);
                 console.log("Movies:", moviesRes.data);
             } catch (err) {
                 notification.error({ message: "Lỗi khi tải dữ liệu", description: err.message });
@@ -38,25 +39,12 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
 
     useEffect(() => {
         if (isModalOpen) {
-            if (dataInit) {
-                form.setFieldsValue({
-                    movieId: dataInit.movie.id,
-                    roomId: dataInit.room.id,
-                    date: moment(dataInit.date),
-                    startTime: moment(dataInit.startTime),
-                    bufferTime: dataInit.bufferTime,
-                    status: dataInit.status,
-                });
-                const movie = movies.find((m) => m.id === dataInit.movie.id);
-                setDuration(movie?.duration || 0);
-            } else {
-                form.resetFields();
-                setDuration(0);
-                form.setFieldsValue({ status: true });
-                setRooms([]);
-            }
+            form.resetFields();
+            setDuration(0);
+            form.setFieldsValue({ status: true });
+            setRooms([]);
         }
-    }, [isModalOpen, dataInit, movies]);
+    }, [isModalOpen]);
 
     const handleMovieChange = (movieId) => {
         const selected = movies.find((m) => m.id === movieId);
@@ -110,13 +98,9 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
 
         try {
             setLoading(true);
-            if (dataInit?.id) {
-                await axios.put(`http://localhost:8080/api/v1/schedules/${dataInit.id}`, payload);
-                notification.success({ message: "Cập nhật lịch chiếu thành công!" });
-            } else {
-                await axios.post("http://localhost:8080/api/v1/schedules", payload);
-                notification.success({ message: "Thêm mới lịch chiếu thành công!" });
-            }
+
+            await axios.post("http://localhost:8080/api/v1/schedules", payload);
+            notification.success({ message: "Thêm mới lịch chiếu thành công!" });
             form.resetFields();
             setIsModalOpen(false);
             if (onSuccess) onSuccess();
@@ -129,17 +113,24 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
 
     return (
         <Modal
-            title={dataInit ? "Cập nhật lịch chiếu" : "Thêm mới lịch chiếu"}
+            title="Thêm mới lịch chiếu"
             open={isModalOpen}
             onCancel={() => setIsModalOpen(false)}
             onOk={() => form.submit()}
             confirmLoading={loading}
-            okText={dataInit ? "Cập nhật" : "Lưu"}
+            okText="Lưu"
             cancelText="Hủy"
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                <Form.Item name="movieId" label="Phim" rules={[{ required: true }]}>
-                    <Select onChange={handleMovieChange} placeholder="Chọn phim">
+                <Form.Item name="movieId" label="Phim" rules={[{ required: true, message: "Vui lòng chọn phim" }]}>
+                    <Select
+                        showSearch
+                        optionFilterProp="children"
+                        filterOption={(input, option) =>
+                            option.children.toLowerCase().includes(input.toLowerCase())
+                        }
+                        onChange={handleMovieChange}
+                        placeholder="Chọn phim">
                         {movies.map((movie) => (
                             <Select.Option key={movie.id} value={movie.id}>
                                 {movie.movieName}
@@ -148,7 +139,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                     </Select>
                 </Form.Item>
 
-                <Form.Item name="date" label="Ngày chiếu" rules={[{ required: true }]}>
+                <Form.Item name="date" label="Ngày chiếu" rules={[{ required: true, message: "Vui lòng chọn ngày chiếu" }]}>
                     <DatePicker
                         style={{ width: "100%" }}
                         placeholder="Chọn ngày chiếu"
@@ -156,7 +147,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                     />
                 </Form.Item>
 
-                <Form.Item name="startTime" label="Giờ bắt đầu" rules={[{ required: true }]}>
+                <Form.Item name="startTime" label="Giờ bắt đầu" rules={[{ required: true, message: "Vui lòng chọn giờ bắt đầu" }]}>
                     <TimePicker
                         format="HH:mm"
                         style={{ width: "100%" }}
@@ -165,7 +156,7 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                     />
                 </Form.Item>
 
-                <Form.Item name="bufferTime" label="Khoảng nghỉ (phút)" rules={[{ required: true }]}>
+                <Form.Item name="bufferTime" label="Khoảng nghỉ (phút)" rules={[{ required: true, message: "Vui lòng nhập khoảng nghỉ" }]}>
                     <InputNumber
                         style={{ width: "100%" }}
                         min={0}
@@ -173,8 +164,12 @@ const ScheduleModal = ({ isModalOpen, setIsModalOpen, dataInit = null, onSuccess
                     />
                 </Form.Item>
 
-                <Form.Item name="roomId" label="Phòng chiếu" rules={[{ required: true }]}>
-                    <Select placeholder="Chọn phòng">
+                <Form.Item name="roomId" label="Phòng chiếu" rules={[{ required: true, message: "Vui lòng chọn phòng chiếu" }]}>
+                    <Select placeholder="Chọn phòng" disabled={
+                        !form.getFieldValue("movieId") ||
+                        !form.getFieldValue("date") ||
+                        !form.getFieldValue("startTime") ||
+                        form.getFieldValue("bufferTime") === undefined}>
                         {rooms.map((room) => (
                             <Select.Option key={room.id} value={room.id}>
                                 {room.name}
